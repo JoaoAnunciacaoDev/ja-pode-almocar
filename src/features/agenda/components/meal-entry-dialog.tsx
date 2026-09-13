@@ -1,5 +1,5 @@
 import type { MealStatus, MealType } from "@/features/agenda/model/meals";
-import { isTimeWithinWindow, type MealWindow } from "@/features/groups/model/meal-windows";
+import { buildTimeOptions, isTimeWithinWindow, type MealWindow } from "@/features/groups/model/meal-windows";
 
 export type MealDraft = { mealType: MealType; status: MealStatus; time: string };
 
@@ -20,6 +20,13 @@ type MealEntryDialogProps = {
 
 export function MealEntryDialog({ draft, mealWindow, onChange, onClose, onSave }: MealEntryDialogProps) {
   const hasValidTime = draft.status === "NOT_GOING" || isTimeWithinWindow(draft.time, mealWindow);
+  const timeOptions = buildTimeOptions(mealWindow);
+  const selectedTimeIndex = Math.max(0, timeOptions.indexOf(draft.time));
+
+  function moveTime(direction: -1 | 1) {
+    const nextIndex = Math.min(timeOptions.length - 1, Math.max(0, selectedTimeIndex + direction));
+    onChange({ ...draft, time: timeOptions[nextIndex] });
+  }
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-end bg-black/35 p-0 backdrop-blur-[2px] sm:place-items-center sm:p-6" onMouseDown={onClose}>
@@ -47,8 +54,12 @@ export function MealEntryDialog({ draft, mealWindow, onChange, onClose, onSave }
 
         {draft.status !== "NOT_GOING" && (
           <div className="mt-5">
-            <label className="block text-sm font-bold" htmlFor="meal-time">Horário</label>
-            <input id="meal-time" type="time" required min={mealWindow.openTime} max={mealWindow.closeTime} step={mealWindow.intervalMinutes * 60} value={draft.time} onChange={(event) => onChange({ ...draft, time: event.target.value })} className="mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 font-mono outline-none focus:border-[var(--tomato)]" />
+            <p className="block text-sm font-bold">Horário</p>
+            <div className="mt-2 grid grid-cols-[52px_1fr_52px] items-center gap-2">
+              <button type="button" onClick={() => moveTime(-1)} disabled={selectedTimeIndex === 0} aria-label={`Diminuir ${mealWindow.intervalMinutes} minutos`} className="grid size-13 place-items-center rounded-2xl border border-black/10 text-2xl font-bold disabled:cursor-not-allowed disabled:opacity-25">−</button>
+              <output aria-live="polite" className="rounded-2xl border border-black/10 bg-[var(--cream)] px-4 py-3 text-center font-mono text-xl font-extrabold">{timeOptions[selectedTimeIndex]}</output>
+              <button type="button" onClick={() => moveTime(1)} disabled={selectedTimeIndex === timeOptions.length - 1} aria-label={`Aumentar ${mealWindow.intervalMinutes} minutos`} className="grid size-13 place-items-center rounded-2xl border border-black/10 text-2xl font-bold disabled:cursor-not-allowed disabled:opacity-25">+</button>
+            </div>
             <p className={`mt-2 text-xs ${hasValidTime ? "text-black/45" : "font-semibold text-red-600"}`}>
               Permitido pelo grupo: {mealWindow.openTime}–{mealWindow.closeTime}, a cada {mealWindow.intervalMinutes} minutos.
             </p>

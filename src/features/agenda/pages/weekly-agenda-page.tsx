@@ -1,43 +1,22 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-import type { MealType } from "@/features/agenda/model/meals";
-import { buildTimeOptions, loadMealWindows } from "@/features/groups/model/meal-windows";
+import { cycleWeeklyTime, loadWeeklyAgenda, saveWeeklyAgenda } from "@/features/agenda/model/weekly-agenda";
+import { loadMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 
-const initialRows: Array<{ mealType: MealType; meal: string; values: string[] }> = [
-  { mealType: "BREAKFAST", meal: "☕ Desjejum", values: ["—", "08:00", "—", "08:10", "—"] },
-  { mealType: "LUNCH", meal: "🍛 Almoço", values: ["12:00", "11:30", "12:30", "—", "12:00"] },
-  { mealType: "DINNER", meal: "🌙 Jantar", values: ["—", "18:00", "17:30", "18:00", "—"] },
-];
-
 export function WeeklyAgendaPage() {
-  const [rows, setRows] = useState(() => {
-    try {
-      const stored = localStorage.getItem("weekly-agenda-demo");
-      return stored ? (JSON.parse(stored) as typeof initialRows) : initialRows;
-    } catch {
-      return initialRows;
-    }
-  });
+  const [rows, setRows] = useState(loadWeeklyAgenda);
   const [saved, setSaved] = useState(false);
   const [mealWindows] = useState(loadMealWindows);
 
   function cycleTime(rowIndex: number, columnIndex: number) {
     setSaved(false);
-    setRows((currentRows) => currentRows.map((row, currentRowIndex) => {
-      if (currentRowIndex !== rowIndex) return row;
-      const currentValue = row.values[columnIndex];
-      const window = mealWindows.find((item) => item.mealType === row.mealType);
-      if (!window) return row;
-      const timeOptions = ["—", ...buildTimeOptions(window)];
-      const nextValue = timeOptions[(timeOptions.indexOf(currentValue) + 1) % timeOptions.length];
-      return { ...row, values: row.values.map((value, currentColumnIndex) => currentColumnIndex === columnIndex ? nextValue : value) };
-    }));
+    setRows((currentRows) => cycleWeeklyTime(currentRows, currentRows[rowIndex].mealType, columnIndex, mealWindows));
   }
 
   function saveWeek() {
-    localStorage.setItem("weekly-agenda-demo", JSON.stringify(rows));
+    saveWeeklyAgenda(rows);
     setSaved(true);
   }
 
