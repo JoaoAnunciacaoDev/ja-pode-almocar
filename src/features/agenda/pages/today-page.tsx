@@ -3,7 +3,8 @@ import { useState } from "react";
 
 import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
-import type { DailyMeal, MealType } from "@/features/agenda/model/meals";
+import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialog";
+import { waitForPerson, type DailyMeal, type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
 import { loadMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 
@@ -51,6 +52,7 @@ export function TodayPage() {
   const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00" });
   const [mealWindows] = useState(loadMealWindows);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [waitTarget, setWaitTarget] = useState<{ mealType: MealType; person: MealOccurrence } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const today = new Intl.DateTimeFormat("pt-BR", {
@@ -104,6 +106,22 @@ export function TodayPage() {
     setNotice("Seu horário foi atualizado neste protótipo.");
   }
 
+  function confirmWaiting() {
+    if (!waitTarget) return;
+
+    setMeals((currentMeals) => {
+      const nextMeals = currentMeals.map((meal) =>
+        meal.type === waitTarget.mealType
+          ? waitForPerson(meal, currentUser, waitTarget.person)
+          : meal,
+      );
+      localStorage.setItem("meal-agenda-demo", JSON.stringify(nextMeals));
+      return nextMeals;
+    });
+    setNotice(`Agora você está aguardando ${waitTarget.person.name}.`);
+    setWaitTarget(null);
+  }
+
   return (
     <AppShell>
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1fr_340px] lg:py-12">
@@ -122,7 +140,14 @@ export function TodayPage() {
             </button>
           )}
           <div className="grid gap-5 md:grid-cols-2">
-            {meals.map((meal) => <MealCard key={meal.type} meal={meal} onEdit={() => openEditor(meal.type)} />)}
+            {meals.map((meal) => (
+              <MealCard
+                key={meal.type}
+                meal={meal}
+                onEdit={() => openEditor(meal.type)}
+                onWaitFor={(person) => setWaitTarget({ mealType: meal.type, person })}
+              />
+            ))}
           </div>
         </section>
 
@@ -158,6 +183,14 @@ export function TodayPage() {
           onChange={changeDraft}
           onClose={() => setIsDialogOpen(false)}
           onSave={saveEntry}
+        />
+      )}
+      {waitTarget && (
+        <WaitPersonDialog
+          person={waitTarget.person}
+          currentTime={meals.find((meal) => meal.type === waitTarget.mealType)?.mine?.time ?? null}
+          onCancel={() => setWaitTarget(null)}
+          onConfirm={confirmWaiting}
         />
       )}
     </AppShell>

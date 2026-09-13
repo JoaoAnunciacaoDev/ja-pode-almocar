@@ -3,7 +3,13 @@ export const mealStatuses = ["CONFIRMED", "PLANNED", "NOT_GOING"] as const;
 
 export type MealType = (typeof mealTypes)[number];
 export type MealStatus = (typeof mealStatuses)[number];
-export type MealOccurrence = { id: string; name: string; time: string | null; status: MealStatus };
+export type MealOccurrence = {
+  id: string;
+  name: string;
+  time: string | null;
+  status: MealStatus;
+  waitingFor?: Pick<MealOccurrence, "id" | "name">;
+};
 export type DailyMeal = { type: MealType; label: string; emoji: string; people: MealOccurrence[]; mine?: MealOccurrence };
 export type MealRoutine = { weekday: number; mealType: MealType; time: string; startDate: string; endDate: string };
 export type MealEntry = { date: string; mealType: MealType; time: string | null; status: MealStatus };
@@ -22,4 +28,23 @@ export function resolveMealForDate(
     (item) => item.mealType === mealType && item.weekday === weekday && item.startDate <= date && item.endDate >= date,
   );
   return routine ? { time: routine.time, status: "PLANNED" } : null;
+}
+
+export function waitForPerson(
+  meal: DailyMeal,
+  currentUser: Pick<MealOccurrence, "id" | "name">,
+  target: Pick<MealOccurrence, "id" | "name">,
+): DailyMeal {
+  if (currentUser.id === target.id) throw new Error("A user cannot wait for themselves");
+
+  const occurrence: MealOccurrence = {
+    ...currentUser,
+    time: null,
+    status: "PLANNED",
+    waitingFor: target,
+  };
+  const people = [...meal.people.filter((person) => person.id !== currentUser.id), occurrence]
+    .sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
+
+  return { ...meal, people, mine: occurrence };
 }
