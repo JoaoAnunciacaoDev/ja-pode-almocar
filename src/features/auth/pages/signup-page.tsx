@@ -5,7 +5,7 @@ import { AuthShell } from "@/features/auth/components/auth-shell";
 import { inputClassName, primaryButtonClassName } from "@/shared/components/form-styles";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
-export function SignupPage() {
+export function SignupPage({ inviteCode }: { inviteCode?: string }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -21,7 +21,7 @@ export function SignupPage() {
       password: String(data.get("password")),
       options: {
         data: { name: String(data.get("name")) },
-        emailRedirectTo: `${window.location.origin}/entrar`,
+        emailRedirectTo: inviteCode ? `${window.location.origin}/convite/${inviteCode}` : `${window.location.origin}/entrar`,
       },
     });
     if (error) {
@@ -30,7 +30,11 @@ export function SignupPage() {
       return;
     }
     if (authData.session) {
-      await navigate({ to: "/grupos" });
+      if (inviteCode) {
+        await navigate({ to: "/convite/$code", params: { code: inviteCode } });
+      } else {
+        await navigate({ to: "/grupos" });
+      }
       return;
     }
     setMessage("Conta criada. Confira seu e-mail para confirmar o cadastro.");
@@ -47,7 +51,7 @@ export function SignupPage() {
         {message && <p role="status" className="rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">{message}</p>}
         <button className={primaryButtonClassName} disabled={loading || Boolean(message)}>{loading ? "Criando…" : "Criar conta"}</button>
       </form>
-      <p className="mt-7 text-center text-sm text-black/50">Já possui uma conta? <Link to="/entrar" className="font-bold text-[var(--tomato)]">Entrar</Link></p>
+      <p className="mt-7 text-center text-sm text-black/50">Já possui uma conta? <Link to="/entrar" search={{ invite: inviteCode }} className="font-bold text-[var(--tomato)]">Entrar</Link></p>
     </AuthShell>
   );
 }

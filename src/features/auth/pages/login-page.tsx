@@ -5,7 +5,7 @@ import { AuthShell } from "@/features/auth/components/auth-shell";
 import { inputClassName, primaryButtonClassName } from "@/shared/components/form-styles";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
-export function LoginPage() {
+export function LoginPage({ inviteCode }: { inviteCode?: string }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -24,6 +24,10 @@ export function LoginPage() {
       setLoading(false);
       return;
     }
+    if (inviteCode) {
+      await navigate({ to: "/convite/$code", params: { code: inviteCode } });
+      return;
+    }
     await navigate({ to: "/grupos" });
   }
 
@@ -35,7 +39,7 @@ export function LoginPage() {
         {errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}
         <button className={primaryButtonClassName} disabled={loading}>{loading ? "Entrando…" : "Entrar"}</button>
       </form>
-      <p className="mt-7 text-center text-sm text-black/50">Ainda não tem conta? <Link to="/cadastro" className="font-bold text-[var(--tomato)]">Criar conta</Link></p>
+      <p className="mt-7 text-center text-sm text-black/50">Ainda não tem conta? <Link to="/cadastro" search={{ invite: inviteCode }} className="font-bold text-[var(--tomato)]">Criar conta</Link></p>
     </AuthShell>
   );
 }

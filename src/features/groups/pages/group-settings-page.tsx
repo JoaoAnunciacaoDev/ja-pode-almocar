@@ -3,17 +3,16 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { fetchGroups } from "@/features/groups/api/groups-api";
+import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows, saveMealWindows } from "@/features/groups/api/meal-windows-api";
-import { getActiveGroup } from "@/features/groups/model/active-group";
 import { defaultMealWindows, type MealWindow } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 
-export function GroupSettingsPage() {
+export function GroupSettingsPage({ groupSlug }: { groupSlug: string }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const groupsQuery = useQuery({ queryKey: ["groups"], queryFn: fetchGroups });
-  const group = getActiveGroup(groupsQuery.data ?? []);
+  const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
+  const group = groupQuery.data;
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const [windowsOverride, setWindowsOverride] = useState<MealWindow[] | null>(null);
   const windows = windowsOverride ?? windowsQuery.data ?? defaultMealWindows;
@@ -28,14 +27,14 @@ export function GroupSettingsPage() {
     setWindowsOverride(windows.map((window) => window.mealType === mealType ? { ...window, ...changes } : window));
   }
 
-  if (groupsQuery.isLoading || windowsQuery.isLoading) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center text-sm text-black/45">Carregando configurações…</div></AppShell>;
-  if (!group) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Crie um grupo primeiro</h1><Link to="/grupos/novo" className="mt-6 inline-block font-bold text-[var(--tomato)]">Criar grupo</Link></div></AppShell>;
-  if (group.ownerId !== user?.id) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Apenas o proprietário pode configurar</h1><Link to="/" className="mt-6 inline-block font-bold text-[var(--tomato)]">Voltar para a agenda</Link></div></AppShell>;
+  if (groupQuery.isLoading || windowsQuery.isLoading) return <AppShell groupSlug={groupSlug}><div className="mx-auto max-w-3xl px-5 py-16 text-center text-sm text-black/45">Carregando configurações…</div></AppShell>;
+  if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Grupo não encontrado</h1><Link to="/grupos" className="mt-6 inline-block font-bold text-[var(--tomato)]">Ver meus grupos</Link></div></AppShell>;
+  if (group.ownerId !== user?.id) return <AppShell groupSlug={group.slug}><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Apenas o proprietário pode configurar</h1><Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="mt-6 inline-block font-bold text-[var(--tomato)]">Voltar para a agenda</Link></div></AppShell>;
 
   return (
-    <AppShell>
+    <AppShell groupSlug={group.slug}>
       <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 lg:py-12">
-        <Link to="/" className="text-sm font-bold text-[var(--tomato)]">← Voltar para a agenda</Link>
+        <Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="text-sm font-bold text-[var(--tomato)]">← Voltar para a agenda</Link>
         <div className="mt-6"><div className="flex items-center gap-2"><p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">{group.name}</p><span className="rounded-full bg-[var(--lemon)] px-2 py-1 text-[10px] font-extrabold uppercase">Proprietário</span></div><h1 className="mt-2 font-serif text-4xl font-bold">Horários do bandejão</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-black/55">Defina quando cada refeição é servida. Todos os integrantes verão apenas horários dentro destes limites.</p></div>
 
         <div className="mt-8 space-y-4">

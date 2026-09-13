@@ -2,6 +2,7 @@ import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 export type GroupSummary = {
   id: string;
+  slug: string;
   name: string;
   institution: string;
   ownerId: string;
@@ -16,11 +17,12 @@ export type GroupInvitePreview = { groupId: string; groupName: string; instituti
 export async function fetchGroups(): Promise<GroupSummary[]> {
   const { data, error } = await requireSupabaseClient()
     .from("groups")
-    .select("id,name,institution,owner_id,timezone,group_members(count)")
+    .select("id,slug,name,institution,owner_id,timezone,group_members(count)")
     .order("created_at");
   if (error) throw error;
   return (data ?? []).map((group) => ({
     id: group.id,
+    slug: group.slug,
     name: group.name,
     institution: group.institution,
     ownerId: group.owner_id,
@@ -30,22 +32,27 @@ export async function fetchGroups(): Promise<GroupSummary[]> {
 }
 
 export async function createGroup(name: string, institution: string) {
-  const { data, error } = await requireSupabaseClient().rpc("create_group", {
+  const client = requireSupabaseClient();
+  const { data, error } = await client.rpc("create_group", {
     group_name: name,
     group_institution: institution,
     group_timezone: "America/Sao_Paulo",
   });
   if (error) throw error;
-  return data as string;
+  return fetchGroupLocator(data as string);
 }
 
-export async function fetchGroup(groupId: string): Promise<GroupDetails> {
+async function fetchGroupLocator(groupId: string) {
+  const { data, error } = await requireSupabaseClient().from("groups").select("id,slug").eq("id", groupId).single();
+  if (error) throw error;
+  return data as { id: string; slug: string };
+}
+
+async function fetchGroupBy(column: "id" | "slug", value: string): Promise<GroupDetails> {
   const client = requireSupabaseClient();
-  const [{ data: group, error: groupError }, { data: memberships, error: membershipError }] = await Promise.all([
-    client.from("groups").select("id,name,institution,owner_id,timezone").eq("id", groupId).single(),
-    client.from("group_members").select("user_id,role").eq("group_id", groupId).order("joined_at"),
-  ]);
+  const { data: group, error: groupError } = await client.from("groups").select("id,slug,name,institution,owner_id,timezone").eq(column, value).single();
   if (groupError) throw groupError;
+  const { data: memberships, error: membershipError } = await client.from("group_members").select("user_id,role").eq("group_id", group.id).order("joined_at");
   if (membershipError) throw membershipError;
 
   const ids = (memberships ?? []).map((membership) => membership.user_id);
@@ -62,6 +69,7 @@ export async function fetchGroup(groupId: string): Promise<GroupDetails> {
 
   return {
     id: group.id,
+    slug: group.slug,
     name: group.name,
     institution: group.institution,
     ownerId: group.owner_id,
@@ -69,6 +77,14 @@ export async function fetchGroup(groupId: string): Promise<GroupDetails> {
     memberCount: members.length,
     members,
   };
+}
+
+export function fetchGroup(groupId: string) {
+  return fetchGroupBy("id", groupId);
+}
+
+export function fetchGroupBySlug(groupSlug: string) {
+  return fetchGroupBy("slug", groupSlug);
 }
 
 export async function getOrCreateInvite(groupId: string) {
@@ -104,5 +120,5 @@ export async function fetchInvitePreview(code: string): Promise<GroupInvitePrevi
 export async function acceptInvite(code: string) {
   const { data, error } = await requireSupabaseClient().rpc("accept_group_invite", { invite_code: code });
   if (error) throw error;
-  return data as string;
+  return fetchGroupLocator(data as string);
 }

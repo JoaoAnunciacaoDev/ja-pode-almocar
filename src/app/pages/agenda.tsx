@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { WeeklyAgendaPage } from "@/features/agenda/pages/weekly-agenda-page";
 import { RequireAuth } from "@/features/auth/components/require-auth";
+import { GroupRouteRedirect } from "@/features/groups/components/group-route-redirect";
 
-export const Route = createFileRoute("/agenda")({ component: () => <RequireAuth><WeeklyAgendaPage /></RequireAuth> });
+export const Route = createFileRoute("/agenda")({ component: () => <RequireAuth><GroupRouteRedirect destination="agenda" /></RequireAuth> });

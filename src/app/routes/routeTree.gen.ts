@@ -14,13 +14,25 @@ import { Route as AgendaRouteImport } from "./../pages/agenda";
 import { Route as CadastroRouteImport } from "./../pages/cadastro";
 import { Route as EntrarRouteImport } from "./../pages/entrar";
 import { Route as EsqueciSenhaRouteImport } from "./../pages/esqueci-senha";
+import { Route as GRouteImport } from "./../pages/g";
 import { Route as GruposRouteImport } from "./../pages/grupos";
 import { Route as RedefinirSenhaRouteImport } from "./../pages/redefinir-senha";
+import { Route as ConfiguracoesNotificacoesRouteImport } from "./../pages/configuracoes.notificacoes";
 import { Route as ConviteCodeRouteImport } from "./../pages/convite.$code";
+import { Route as GGroupSlugRouteImport } from "./../pages/g.$groupSlug";
 import { Route as GrupoConfiguracoesRouteImport } from "./../pages/grupo.configuracoes";
 import { Route as GruposIndexRouteImport } from "./../pages/grupos.index";
 import { Route as GruposGroupIdRouteImport } from "./../pages/grupos.$groupId";
 import { Route as GruposNovoRouteImport } from "./../pages/grupos.novo";
+import { Route as GGroupSlugIndexRouteImport } from "./../pages/g.$groupSlug.index";
+import { Route as GGroupSlugAgendaRouteImport } from "./../pages/g.$groupSlug.agenda";
+import { Route as GGroupSlugConfiguracoesRouteImport } from "./../pages/g.$groupSlug.configuracoes";
+import { Route as GGroupSlugHojeRouteImport } from "./../pages/g.$groupSlug.hoje";
+import { Route as GGroupSlugRotinasRouteImport } from "./../pages/g.$groupSlug.rotinas";
+import { Route as GruposGroupIdIndexRouteImport } from "./../pages/grupos.$groupId.index";
+import { Route as GruposGroupIdAgendaRouteImport } from "./../pages/grupos.$groupId.agenda";
+import { Route as GruposGroupIdConfiguracoesRouteImport } from "./../pages/grupos.$groupId.configuracoes";
+import { Route as GruposGroupIdHojeRouteImport } from "./../pages/grupos.$groupId.hoje";
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
@@ -47,6 +59,11 @@ const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
   path: "/esqueci-senha",
   getParentRoute: () => rootRouteImport,
 } as any);
+const GRoute = GRouteImport.update({
+  id: "/g",
+  path: "/g",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const GruposRoute = GruposRouteImport.update({
   id: "/grupos",
   path: "/grupos",
@@ -57,10 +74,21 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   path: "/redefinir-senha",
   getParentRoute: () => rootRouteImport,
 } as any);
+const ConfiguracoesNotificacoesRoute =
+  ConfiguracoesNotificacoesRouteImport.update({
+    id: "/configuracoes/notificacoes",
+    path: "/configuracoes/notificacoes",
+    getParentRoute: () => rootRouteImport,
+  } as any);
 const ConviteCodeRoute = ConviteCodeRouteImport.update({
   id: "/convite/$code",
   path: "/convite/$code",
   getParentRoute: () => rootRouteImport,
+} as any);
+const GGroupSlugRoute = GGroupSlugRouteImport.update({
+  id: "/$groupSlug",
+  path: "/$groupSlug",
+  getParentRoute: () => GRoute,
 } as any);
 const GrupoConfiguracoesRoute = GrupoConfiguracoesRouteImport.update({
   id: "/grupo/configuracoes",
@@ -82,6 +110,52 @@ const GruposNovoRoute = GruposNovoRouteImport.update({
   path: "/novo",
   getParentRoute: () => GruposRoute,
 } as any);
+const GGroupSlugIndexRoute = GGroupSlugIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => GGroupSlugRoute,
+} as any);
+const GGroupSlugAgendaRoute = GGroupSlugAgendaRouteImport.update({
+  id: "/agenda",
+  path: "/agenda",
+  getParentRoute: () => GGroupSlugRoute,
+} as any);
+const GGroupSlugConfiguracoesRoute = GGroupSlugConfiguracoesRouteImport.update({
+  id: "/configuracoes",
+  path: "/configuracoes",
+  getParentRoute: () => GGroupSlugRoute,
+} as any);
+const GGroupSlugHojeRoute = GGroupSlugHojeRouteImport.update({
+  id: "/hoje",
+  path: "/hoje",
+  getParentRoute: () => GGroupSlugRoute,
+} as any);
+const GGroupSlugRotinasRoute = GGroupSlugRotinasRouteImport.update({
+  id: "/rotinas",
+  path: "/rotinas",
+  getParentRoute: () => GGroupSlugRoute,
+} as any);
+const GruposGroupIdIndexRoute = GruposGroupIdIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => GruposGroupIdRoute,
+} as any);
+const GruposGroupIdAgendaRoute = GruposGroupIdAgendaRouteImport.update({
+  id: "/agenda",
+  path: "/agenda",
+  getParentRoute: () => GruposGroupIdRoute,
+} as any);
+const GruposGroupIdConfiguracoesRoute =
+  GruposGroupIdConfiguracoesRouteImport.update({
+    id: "/configuracoes",
+    path: "/configuracoes",
+    getParentRoute: () => GruposGroupIdRoute,
+  } as any);
+const GruposGroupIdHojeRoute = GruposGroupIdHojeRouteImport.update({
+  id: "/hoje",
+  path: "/hoje",
+  getParentRoute: () => GruposGroupIdRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
@@ -89,13 +163,25 @@ export interface FileRoutesByFullPath {
   "/cadastro": typeof CadastroRoute;
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
+  "/g": typeof GRouteWithChildren;
   "/grupos": typeof GruposRouteWithChildren;
   "/redefinir-senha": typeof RedefinirSenhaRoute;
+  "/configuracoes/notificacoes": typeof ConfiguracoesNotificacoesRoute;
   "/convite/$code": typeof ConviteCodeRoute;
+  "/g/$groupSlug": typeof GGroupSlugRouteWithChildren;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
-  "/grupos/$groupId": typeof GruposGroupIdRoute;
+  "/grupos/$groupId": typeof GruposGroupIdRouteWithChildren;
   "/grupos/novo": typeof GruposNovoRoute;
   "/grupos/": typeof GruposIndexRoute;
+  "/g/$groupSlug/agenda": typeof GGroupSlugAgendaRoute;
+  "/g/$groupSlug/configuracoes": typeof GGroupSlugConfiguracoesRoute;
+  "/g/$groupSlug/hoje": typeof GGroupSlugHojeRoute;
+  "/g/$groupSlug/rotinas": typeof GGroupSlugRotinasRoute;
+  "/grupos/$groupId/agenda": typeof GruposGroupIdAgendaRoute;
+  "/grupos/$groupId/configuracoes": typeof GruposGroupIdConfiguracoesRoute;
+  "/grupos/$groupId/hoje": typeof GruposGroupIdHojeRoute;
+  "/g/$groupSlug/": typeof GGroupSlugIndexRoute;
+  "/grupos/$groupId/": typeof GruposGroupIdIndexRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
@@ -103,12 +189,22 @@ export interface FileRoutesByTo {
   "/cadastro": typeof CadastroRoute;
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
+  "/g": typeof GRouteWithChildren;
   "/redefinir-senha": typeof RedefinirSenhaRoute;
+  "/configuracoes/notificacoes": typeof ConfiguracoesNotificacoesRoute;
   "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
-  "/grupos/$groupId": typeof GruposGroupIdRoute;
   "/grupos/novo": typeof GruposNovoRoute;
   "/grupos": typeof GruposIndexRoute;
+  "/g/$groupSlug/agenda": typeof GGroupSlugAgendaRoute;
+  "/g/$groupSlug/configuracoes": typeof GGroupSlugConfiguracoesRoute;
+  "/g/$groupSlug/hoje": typeof GGroupSlugHojeRoute;
+  "/g/$groupSlug/rotinas": typeof GGroupSlugRotinasRoute;
+  "/grupos/$groupId/agenda": typeof GruposGroupIdAgendaRoute;
+  "/grupos/$groupId/configuracoes": typeof GruposGroupIdConfiguracoesRoute;
+  "/grupos/$groupId/hoje": typeof GruposGroupIdHojeRoute;
+  "/g/$groupSlug": typeof GGroupSlugIndexRoute;
+  "/grupos/$groupId": typeof GruposGroupIdIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -117,13 +213,25 @@ export interface FileRoutesById {
   "/cadastro": typeof CadastroRoute;
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
+  "/g": typeof GRouteWithChildren;
   "/grupos": typeof GruposRouteWithChildren;
   "/redefinir-senha": typeof RedefinirSenhaRoute;
+  "/configuracoes/notificacoes": typeof ConfiguracoesNotificacoesRoute;
   "/convite/$code": typeof ConviteCodeRoute;
+  "/g/$groupSlug": typeof GGroupSlugRouteWithChildren;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
-  "/grupos/$groupId": typeof GruposGroupIdRoute;
+  "/grupos/$groupId": typeof GruposGroupIdRouteWithChildren;
   "/grupos/novo": typeof GruposNovoRoute;
   "/grupos/": typeof GruposIndexRoute;
+  "/g/$groupSlug/agenda": typeof GGroupSlugAgendaRoute;
+  "/g/$groupSlug/configuracoes": typeof GGroupSlugConfiguracoesRoute;
+  "/g/$groupSlug/hoje": typeof GGroupSlugHojeRoute;
+  "/g/$groupSlug/rotinas": typeof GGroupSlugRotinasRoute;
+  "/grupos/$groupId/agenda": typeof GruposGroupIdAgendaRoute;
+  "/grupos/$groupId/configuracoes": typeof GruposGroupIdConfiguracoesRoute;
+  "/grupos/$groupId/hoje": typeof GruposGroupIdHojeRoute;
+  "/g/$groupSlug/": typeof GGroupSlugIndexRoute;
+  "/grupos/$groupId/": typeof GruposGroupIdIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -133,13 +241,25 @@ export interface FileRouteTypes {
     | "/cadastro"
     | "/entrar"
     | "/esqueci-senha"
+    | "/g"
     | "/grupos"
     | "/redefinir-senha"
+    | "/configuracoes/notificacoes"
     | "/convite/$code"
+    | "/g/$groupSlug"
     | "/grupo/configuracoes"
     | "/grupos/$groupId"
     | "/grupos/novo"
-    | "/grupos/";
+    | "/grupos/"
+    | "/g/$groupSlug/agenda"
+    | "/g/$groupSlug/configuracoes"
+    | "/g/$groupSlug/hoje"
+    | "/g/$groupSlug/rotinas"
+    | "/grupos/$groupId/agenda"
+    | "/grupos/$groupId/configuracoes"
+    | "/grupos/$groupId/hoje"
+    | "/g/$groupSlug/"
+    | "/grupos/$groupId/";
   fileRoutesByTo: FileRoutesByTo;
   to:
     | "/"
@@ -147,12 +267,22 @@ export interface FileRouteTypes {
     | "/cadastro"
     | "/entrar"
     | "/esqueci-senha"
+    | "/g"
     | "/redefinir-senha"
+    | "/configuracoes/notificacoes"
     | "/convite/$code"
     | "/grupo/configuracoes"
-    | "/grupos/$groupId"
     | "/grupos/novo"
-    | "/grupos";
+    | "/grupos"
+    | "/g/$groupSlug/agenda"
+    | "/g/$groupSlug/configuracoes"
+    | "/g/$groupSlug/hoje"
+    | "/g/$groupSlug/rotinas"
+    | "/grupos/$groupId/agenda"
+    | "/grupos/$groupId/configuracoes"
+    | "/grupos/$groupId/hoje"
+    | "/g/$groupSlug"
+    | "/grupos/$groupId";
   id:
     | "__root__"
     | "/"
@@ -160,13 +290,25 @@ export interface FileRouteTypes {
     | "/cadastro"
     | "/entrar"
     | "/esqueci-senha"
+    | "/g"
     | "/grupos"
     | "/redefinir-senha"
+    | "/configuracoes/notificacoes"
     | "/convite/$code"
+    | "/g/$groupSlug"
     | "/grupo/configuracoes"
     | "/grupos/$groupId"
     | "/grupos/novo"
-    | "/grupos/";
+    | "/grupos/"
+    | "/g/$groupSlug/agenda"
+    | "/g/$groupSlug/configuracoes"
+    | "/g/$groupSlug/hoje"
+    | "/g/$groupSlug/rotinas"
+    | "/grupos/$groupId/agenda"
+    | "/grupos/$groupId/configuracoes"
+    | "/grupos/$groupId/hoje"
+    | "/g/$groupSlug/"
+    | "/grupos/$groupId/";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -175,8 +317,10 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute;
   EntrarRoute: typeof EntrarRoute;
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute;
+  GRoute: typeof GRouteWithChildren;
   GruposRoute: typeof GruposRouteWithChildren;
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute;
+  ConfiguracoesNotificacoesRoute: typeof ConfiguracoesNotificacoesRoute;
   ConviteCodeRoute: typeof ConviteCodeRoute;
   GrupoConfiguracoesRoute: typeof GrupoConfiguracoesRoute;
 }
@@ -218,6 +362,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof EsqueciSenhaRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/g": {
+      id: "/g";
+      path: "/g";
+      fullPath: "/g";
+      preLoaderRoute: typeof GRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/grupos": {
       id: "/grupos";
       path: "/grupos";
@@ -232,12 +383,26 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof RedefinirSenhaRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/configuracoes/notificacoes": {
+      id: "/configuracoes/notificacoes";
+      path: "/configuracoes/notificacoes";
+      fullPath: "/configuracoes/notificacoes";
+      preLoaderRoute: typeof ConfiguracoesNotificacoesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/convite/$code": {
       id: "/convite/$code";
       path: "/convite/$code";
       fullPath: "/convite/$code";
       preLoaderRoute: typeof ConviteCodeRouteImport;
       parentRoute: typeof rootRouteImport;
+    };
+    "/g/$groupSlug": {
+      id: "/g/$groupSlug";
+      path: "/$groupSlug";
+      fullPath: "/g/$groupSlug";
+      preLoaderRoute: typeof GGroupSlugRouteImport;
+      parentRoute: typeof GRoute;
     };
     "/grupo/configuracoes": {
       id: "/grupo/configuracoes";
@@ -267,17 +432,128 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof GruposNovoRouteImport;
       parentRoute: typeof GruposRoute;
     };
+    "/g/$groupSlug/": {
+      id: "/g/$groupSlug/";
+      path: "/";
+      fullPath: "/g/$groupSlug/";
+      preLoaderRoute: typeof GGroupSlugIndexRouteImport;
+      parentRoute: typeof GGroupSlugRoute;
+    };
+    "/g/$groupSlug/agenda": {
+      id: "/g/$groupSlug/agenda";
+      path: "/agenda";
+      fullPath: "/g/$groupSlug/agenda";
+      preLoaderRoute: typeof GGroupSlugAgendaRouteImport;
+      parentRoute: typeof GGroupSlugRoute;
+    };
+    "/g/$groupSlug/configuracoes": {
+      id: "/g/$groupSlug/configuracoes";
+      path: "/configuracoes";
+      fullPath: "/g/$groupSlug/configuracoes";
+      preLoaderRoute: typeof GGroupSlugConfiguracoesRouteImport;
+      parentRoute: typeof GGroupSlugRoute;
+    };
+    "/g/$groupSlug/hoje": {
+      id: "/g/$groupSlug/hoje";
+      path: "/hoje";
+      fullPath: "/g/$groupSlug/hoje";
+      preLoaderRoute: typeof GGroupSlugHojeRouteImport;
+      parentRoute: typeof GGroupSlugRoute;
+    };
+    "/g/$groupSlug/rotinas": {
+      id: "/g/$groupSlug/rotinas";
+      path: "/rotinas";
+      fullPath: "/g/$groupSlug/rotinas";
+      preLoaderRoute: typeof GGroupSlugRotinasRouteImport;
+      parentRoute: typeof GGroupSlugRoute;
+    };
+    "/grupos/$groupId/": {
+      id: "/grupos/$groupId/";
+      path: "/";
+      fullPath: "/grupos/$groupId/";
+      preLoaderRoute: typeof GruposGroupIdIndexRouteImport;
+      parentRoute: typeof GruposGroupIdRoute;
+    };
+    "/grupos/$groupId/agenda": {
+      id: "/grupos/$groupId/agenda";
+      path: "/agenda";
+      fullPath: "/grupos/$groupId/agenda";
+      preLoaderRoute: typeof GruposGroupIdAgendaRouteImport;
+      parentRoute: typeof GruposGroupIdRoute;
+    };
+    "/grupos/$groupId/configuracoes": {
+      id: "/grupos/$groupId/configuracoes";
+      path: "/configuracoes";
+      fullPath: "/grupos/$groupId/configuracoes";
+      preLoaderRoute: typeof GruposGroupIdConfiguracoesRouteImport;
+      parentRoute: typeof GruposGroupIdRoute;
+    };
+    "/grupos/$groupId/hoje": {
+      id: "/grupos/$groupId/hoje";
+      path: "/hoje";
+      fullPath: "/grupos/$groupId/hoje";
+      preLoaderRoute: typeof GruposGroupIdHojeRouteImport;
+      parentRoute: typeof GruposGroupIdRoute;
+    };
   }
 }
 
+interface GGroupSlugRouteChildren {
+  GGroupSlugAgendaRoute: typeof GGroupSlugAgendaRoute;
+  GGroupSlugConfiguracoesRoute: typeof GGroupSlugConfiguracoesRoute;
+  GGroupSlugHojeRoute: typeof GGroupSlugHojeRoute;
+  GGroupSlugRotinasRoute: typeof GGroupSlugRotinasRoute;
+  GGroupSlugIndexRoute: typeof GGroupSlugIndexRoute;
+}
+
+const GGroupSlugRouteChildren: GGroupSlugRouteChildren = {
+  GGroupSlugAgendaRoute: GGroupSlugAgendaRoute,
+  GGroupSlugConfiguracoesRoute: GGroupSlugConfiguracoesRoute,
+  GGroupSlugHojeRoute: GGroupSlugHojeRoute,
+  GGroupSlugRotinasRoute: GGroupSlugRotinasRoute,
+  GGroupSlugIndexRoute: GGroupSlugIndexRoute,
+};
+
+const GGroupSlugRouteWithChildren = GGroupSlugRoute._addFileChildren(
+  GGroupSlugRouteChildren,
+);
+
+interface GRouteChildren {
+  GGroupSlugRoute: typeof GGroupSlugRouteWithChildren;
+}
+
+const GRouteChildren: GRouteChildren = {
+  GGroupSlugRoute: GGroupSlugRouteWithChildren,
+};
+
+const GRouteWithChildren = GRoute._addFileChildren(GRouteChildren);
+
+interface GruposGroupIdRouteChildren {
+  GruposGroupIdAgendaRoute: typeof GruposGroupIdAgendaRoute;
+  GruposGroupIdConfiguracoesRoute: typeof GruposGroupIdConfiguracoesRoute;
+  GruposGroupIdHojeRoute: typeof GruposGroupIdHojeRoute;
+  GruposGroupIdIndexRoute: typeof GruposGroupIdIndexRoute;
+}
+
+const GruposGroupIdRouteChildren: GruposGroupIdRouteChildren = {
+  GruposGroupIdAgendaRoute: GruposGroupIdAgendaRoute,
+  GruposGroupIdConfiguracoesRoute: GruposGroupIdConfiguracoesRoute,
+  GruposGroupIdHojeRoute: GruposGroupIdHojeRoute,
+  GruposGroupIdIndexRoute: GruposGroupIdIndexRoute,
+};
+
+const GruposGroupIdRouteWithChildren = GruposGroupIdRoute._addFileChildren(
+  GruposGroupIdRouteChildren,
+);
+
 interface GruposRouteChildren {
-  GruposGroupIdRoute: typeof GruposGroupIdRoute;
+  GruposGroupIdRoute: typeof GruposGroupIdRouteWithChildren;
   GruposNovoRoute: typeof GruposNovoRoute;
   GruposIndexRoute: typeof GruposIndexRoute;
 }
 
 const GruposRouteChildren: GruposRouteChildren = {
-  GruposGroupIdRoute: GruposGroupIdRoute,
+  GruposGroupIdRoute: GruposGroupIdRouteWithChildren,
   GruposNovoRoute: GruposNovoRoute,
   GruposIndexRoute: GruposIndexRoute,
 };
@@ -291,8 +567,10 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   EntrarRoute: EntrarRoute,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
+  GRoute: GRouteWithChildren,
   GruposRoute: GruposRouteWithChildren,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  ConfiguracoesNotificacoesRoute: ConfiguracoesNotificacoesRoute,
   ConviteCodeRoute: ConviteCodeRoute,
   GrupoConfiguracoesRoute: GrupoConfiguracoesRoute,
 };

@@ -10,9 +10,8 @@ import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialo
 import { type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
 import { cycleWeeklyTime, defaultWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { fetchGroups } from "@/features/groups/api/groups-api";
+import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
-import { getActiveGroup } from "@/features/groups/model/active-group";
 import { defaultMealWindows, isTimeWithinWindow } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 
@@ -26,11 +25,11 @@ function dateInTimezone(timezone: string) {
   return `${value.year}-${value.month}-${value.day}`;
 }
 
-export function TodayPage() {
+export function TodayPage({ groupSlug }: { groupSlug: string }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const groupsQuery = useQuery({ queryKey: ["groups"], queryFn: fetchGroups });
-  const group = getActiveGroup(groupsQuery.data ?? []);
+  const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
+  const group = groupQuery.data;
   const weekDates = useMemo(() => getWorkWeekDates(), []);
   const date = dateInTimezone(group?.timezone ?? "America/Sao_Paulo");
   const agendaQuery = useQuery({ queryKey: ["daily-agenda", group?.id, date], queryFn: () => fetchDailyAgenda(group!.id, date, user!.id), enabled: Boolean(group && user) });
@@ -50,7 +49,7 @@ export function TodayPage() {
   });
 
   const today = new Intl.DateTimeFormat("pt-BR", {
-    weekday: "long", day: "numeric", month: "long", timeZone: "America/Sao_Paulo",
+    weekday: "long", day: "numeric", month: "long", timeZone: group?.timezone ?? "America/Sao_Paulo",
   }).format(new Date());
 
   function openEditor(mealType: MealType = "LUNCH") {
@@ -104,11 +103,11 @@ export function TodayPage() {
     setNotice("Horário semanal atualizado.");
   }
 
-  if (groupsQuery.isLoading || agendaQuery.isLoading) return <AppShell><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando agenda…</div></AppShell>;
-  if (!group) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><p className="text-4xl">👥</p><h1 className="mt-5 font-serif text-3xl font-bold">Crie seu primeiro grupo</h1><p className="mt-3 text-sm text-black/45">Você precisa de um grupo para compartilhar horários.</p><Link to="/grupos/novo" className="mt-6 inline-block rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Criar grupo</Link></div></AppShell>;
+  if (groupQuery.isLoading || agendaQuery.isLoading) return <AppShell groupSlug={groupSlug}><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando agenda…</div></AppShell>;
+  if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><p className="text-4xl">🔍</p><h1 className="mt-5 font-serif text-3xl font-bold">Grupo não encontrado</h1><p className="mt-3 text-sm text-black/45">Você pode não fazer mais parte deste grupo.</p><Link to="/grupos" className="mt-6 inline-block rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Ver meus grupos</Link></div></AppShell>;
 
   return (
-    <AppShell>
+    <AppShell groupSlug={group.slug}>
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1fr_340px] lg:py-12">
         <section>
           <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
@@ -140,7 +139,7 @@ export function TodayPage() {
           <section className="rounded-[28px] border border-black/8 bg-white p-5 shadow-[0_18px_60px_rgba(42,35,28,.07)]">
             <div className="mb-5 flex items-center justify-between">
               <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-black/40">Visão rápida</p><h2 className="mt-1 text-xl font-bold">Minha semana</h2></div>
-              <Link to="/agenda" className="text-sm font-bold text-[var(--tomato)]">Editar</Link>
+              <Link to="/g/$groupSlug/agenda" params={{ groupSlug: group.slug }} className="text-sm font-bold text-[var(--tomato)]">Editar</Link>
             </div>
             <div className="grid grid-cols-5 gap-2">
               {weekDates.map((weekDate, index) => (
@@ -159,7 +158,7 @@ export function TodayPage() {
           <section className="rounded-[28px] bg-[var(--sage)] p-5 text-white shadow-[0_18px_50px_rgba(49,91,72,.18)]">
             <p className="text-3xl">👋</p><h2 className="mt-3 text-xl font-bold">Faltam 2 confirmações</h2>
             <p className="mt-2 text-sm leading-6 text-white/70">Avise o grupo se seus horários desta semana continuam valendo.</p>
-            <Link to="/agenda" className="mt-5 block w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-[var(--sage)]">Revisar minha semana</Link>
+            <Link to="/g/$groupSlug/agenda" params={{ groupSlug: group.slug }} className="mt-5 block w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-[var(--sage)]">Revisar minha semana</Link>
           </section>
         </aside>
       </div>

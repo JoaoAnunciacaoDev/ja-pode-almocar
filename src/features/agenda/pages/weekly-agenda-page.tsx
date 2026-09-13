@@ -5,20 +5,19 @@ import { useMemo, useState } from "react";
 import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda } from "@/features/agenda/api/weekly-agenda-api";
 import { cycleWeeklyTime, defaultWeeklyAgenda, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { fetchGroups } from "@/features/groups/api/groups-api";
+import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
-import { getActiveGroup } from "@/features/groups/model/active-group";
 import { defaultMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 
 const dayNames = ["SEG", "TER", "QUA", "QUI", "SEX"];
 
-export function WeeklyAgendaPage() {
+export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const dates = useMemo(() => getWorkWeekDates(), []);
-  const groupsQuery = useQuery({ queryKey: ["groups"], queryFn: fetchGroups });
-  const group = getActiveGroup(groupsQuery.data ?? []);
+  const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
+  const group = groupQuery.data;
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const weekQuery = useQuery({ queryKey: ["weekly-agenda", group?.id, dates[0]], queryFn: () => fetchWeeklyAgenda(group!.id, user!.id, dates), enabled: Boolean(group && user) });
   const [rowsOverride, setRowsOverride] = useState<WeeklyAgendaRow[] | null>(null);
@@ -39,16 +38,16 @@ export function WeeklyAgendaPage() {
     setRowsOverride(cycleWeeklyTime(rows, rows[rowIndex].mealType, columnIndex, windows));
   }
 
-  if (groupsQuery.isLoading || weekQuery.isLoading) return <AppShell><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando sua semana…</div></AppShell>;
-  if (!group) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Crie um grupo primeiro</h1><Link to="/grupos/novo" className="mt-6 inline-block font-bold text-[var(--tomato)]">Criar grupo</Link></div></AppShell>;
+  if (groupQuery.isLoading || weekQuery.isLoading) return <AppShell groupSlug={groupSlug}><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando sua semana…</div></AppShell>;
+  if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Grupo não encontrado</h1><Link to="/grupos" className="mt-6 inline-block font-bold text-[var(--tomato)]">Ver meus grupos</Link></div></AppShell>;
 
   return (
-    <AppShell>
+    <AppShell groupSlug={group.slug}>
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:py-12">
-        <Link to="/" className="text-sm font-bold text-[var(--tomato)]">← Voltar para hoje</Link>
+        <Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="text-sm font-bold text-[var(--tomato)]">← Voltar para hoje</Link>
         <div className="mt-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">{group.name}</p><h1 className="mt-2 font-serif text-4xl font-bold">Minha semana</h1></div>
-          <button disabled={saveMutation.isPending} type="button" onClick={() => saveMutation.mutate()} className="rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{saveMutation.isPending ? "Salvando…" : "Salvar alterações"}</button>
+          <div className="flex flex-wrap gap-2"><Link to="/g/$groupSlug/rotinas" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-sm font-bold">Editar rotinas</Link><button disabled={saveMutation.isPending} type="button" onClick={() => saveMutation.mutate()} className="rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{saveMutation.isPending ? "Salvando…" : "Salvar alterações"}</button></div>
         </div>
         {saveMutation.isSuccess && <p role="status" className="mt-5 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">✓ Alterações salvas no grupo.</p>}
         {(weekQuery.error || saveMutation.error) && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{weekQuery.error?.message || saveMutation.error?.message}</p>}

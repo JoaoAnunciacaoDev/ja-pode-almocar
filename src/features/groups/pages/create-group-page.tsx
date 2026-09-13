@@ -11,9 +11,9 @@ export function CreateGroupPage() {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: ({ name, institution }: { name: string; institution: string }) => createGroup(name, institution),
-    onSuccess: async (groupId) => {
+    onSuccess: async (group) => {
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
-      await navigate({ to: "/grupos/$groupId", params: { groupId } });
+      await navigate({ to: "/g/$groupSlug", params: { groupSlug: group.slug } });
     },
   });
 

@@ -32,14 +32,20 @@ src/
 
 O arquivo `src/app/routes/routeTree.gen.ts` é gerado automaticamente pelo plugin do TanStack Router.
 
-## Rotas do protótipo
+## Rotas principais
 
 - `/entrar`, `/cadastro` e `/esqueci-senha`: acesso e recuperação de conta.
 - `/grupos`: lista de grupos.
 - `/grupos/novo`: criação de grupo.
-- `/grupos/:groupId`: integrantes e envio de convites.
+- `/g/:groupSlug`: integrantes e envio de convites.
+- `/g/:groupSlug/hoje`: agenda diária do grupo.
+- `/g/:groupSlug/agenda`: planejamento da semana.
+- `/g/:groupSlug/rotinas`: horários recorrentes do usuário.
+- `/g/:groupSlug/configuracoes`: horários de funcionamento do grupo.
+- `/configuracoes/notificacoes`: preferências pessoais de notificação.
 - `/convite/:code`: aceite de convite.
-- `/` e `/agenda`: agenda diária e semanal.
+
+Links antigos com o UUID do grupo são redirecionados para o endereço legível correspondente.
 
 ## Banco
 
@@ -62,7 +68,7 @@ bun run build
 
 ## Próximos incrementos
 
-- autenticação e criação de perfil;
-- criação de grupo e entrada por convite;
-- edição da agenda diária e semanal;
+- gestão de integrantes, saída e transferência de propriedade;
+- revogação e regeneração de convites;
 - tarefas de e-mail semanais e diárias.
+- testes E2E dos fluxos de autenticação, convite e agenda.

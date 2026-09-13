@@ -3,23 +3,22 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { fetchGroup, getOrCreateInvite } from "@/features/groups/api/groups-api";
-import { setActiveGroupId } from "@/features/groups/model/active-group";
+import { fetchGroupBySlug, getOrCreateInvite } from "@/features/groups/api/groups-api";
 import { AppShell } from "@/shared/components/app-shell";
 
 function initials(name: string) {
   return name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
-export function GroupDetailPage({ groupId }: { groupId: string }) {
+export function GroupDetailPage({ groupSlug }: { groupSlug: string }) {
   const { user } = useAuth();
   const [feedback, setFeedback] = useState<string | null>(null);
-  const groupQuery = useQuery({ queryKey: ["groups", groupId], queryFn: () => fetchGroup(groupId) });
+  const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
   const isOwner = group?.ownerId === user?.id;
   const inviteQuery = useQuery({
-    queryKey: ["groups", groupId, "invite"],
-    queryFn: () => getOrCreateInvite(groupId),
+    queryKey: ["groups", group?.id, "invite"],
+    queryFn: () => getOrCreateInvite(group!.id),
     enabled: isOwner,
   });
 
@@ -47,12 +46,12 @@ export function GroupDetailPage({ groupId }: { groupId: string }) {
   }
 
   return (
-    <AppShell>
+    <AppShell groupSlug={group.slug}>
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:py-12">
         <Link to="/grupos" className="text-sm font-bold text-[var(--tomato)]">← Meus grupos</Link>
         <div className="mt-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">Grupo</p><h1 className="mt-2 font-serif text-4xl font-bold">{group.name}</h1><p className="mt-2 text-black/45">{group.institution || "Instituição não informada"}</p></div>
-          <div className="flex gap-3">{isOwner && <Link to="/grupo/configuracoes" onClick={() => setActiveGroupId(group.id)} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Configurar</Link>}<Link to="/" onClick={() => setActiveGroupId(group.id)} className="rounded-2xl bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white">Ver agenda</Link></div>
+          <div className="flex flex-wrap gap-3"><Link to="/g/$groupSlug/rotinas" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Minhas rotinas</Link>{isOwner && <Link to="/g/$groupSlug/configuracoes" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Configurar</Link>}<Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="rounded-2xl bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white">Ver agenda</Link></div>
         </div>
 
         {feedback && <button type="button" onClick={() => setFeedback(null)} className="mt-6 flex w-full items-center justify-between rounded-2xl bg-[var(--sage)] px-4 py-3 text-left text-sm font-semibold text-white"><span>✓ {feedback}</span><span>×</span></button>}

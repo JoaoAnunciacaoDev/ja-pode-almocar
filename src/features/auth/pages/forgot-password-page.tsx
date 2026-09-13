@@ -26,13 +26,13 @@ export function ForgotPasswordPage() {
   return (
     <AuthShell eyebrow="Recuperação" title="Esqueceu a senha?" description="Informe seu e-mail e enviaremos um link para você criar uma nova senha.">
       {sentTo ? (
-        <div className="rounded-[24px] bg-white p-6 shadow-sm"><p className="text-3xl">📬</p><h2 className="mt-4 text-xl font-bold">Confira seu e-mail</h2><p className="mt-2 text-sm leading-6 text-black/55">Enviamos o link de recuperação para <strong>{sentTo}</strong>.</p><Link to="/entrar" className="mt-6 block text-sm font-bold text-[var(--tomato)]">← Voltar para entrar</Link></div>
+        <div className="rounded-[24px] bg-white p-6 shadow-sm"><p className="text-3xl">📬</p><h2 className="mt-4 text-xl font-bold">Confira seu e-mail</h2><p className="mt-2 text-sm leading-6 text-black/55">Enviamos o link de recuperação para <strong>{sentTo}</strong>.</p><Link to="/entrar" search={{ invite: undefined }} className="mt-6 block text-sm font-bold text-[var(--tomato)]">← Voltar para entrar</Link></div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
           <label className="block text-sm font-bold">E-mail<input className={inputClassName} type="email" name="email" autoComplete="email" required /></label>
           {errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}
           <button className={primaryButtonClassName}>Enviar link de recuperação</button>
-          <Link to="/entrar" className="block text-center text-sm font-bold text-[var(--tomato)]">← Voltar para entrar</Link>
+          <Link to="/entrar" search={{ invite: undefined }} className="block text-center text-sm font-bold text-[var(--tomato)]">← Voltar para entrar</Link>
         </form>
       )}
     </AuthShell>
