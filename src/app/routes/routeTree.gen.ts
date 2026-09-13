@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from "./../pages/__root";
 import { Route as IndexRouteImport } from "./../pages/index";
 import { Route as AgendaRouteImport } from "./../pages/agenda";
+import { Route as GrupoConfiguracoesRouteImport } from "./../pages/grupo.configuracoes";
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
@@ -22,31 +23,40 @@ const AgendaRoute = AgendaRouteImport.update({
   path: "/agenda",
   getParentRoute: () => rootRouteImport,
 } as any);
+const GrupoConfiguracoesRoute = GrupoConfiguracoesRouteImport.update({
+  id: "/grupo/configuracoes",
+  path: "/grupo/configuracoes",
+  getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/agenda";
+  fullPaths: "/" | "/agenda" | "/grupo/configuracoes";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/agenda";
-  id: "__root__" | "/" | "/agenda";
+  to: "/" | "/agenda" | "/grupo/configuracoes";
+  id: "__root__" | "/" | "/agenda" | "/grupo/configuracoes";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AgendaRoute: typeof AgendaRoute;
+  GrupoConfiguracoesRoute: typeof GrupoConfiguracoesRoute;
 }
 
 declare module "@tanstack/react-router" {
@@ -65,12 +75,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AgendaRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/grupo/configuracoes": {
+      id: "/grupo/configuracoes";
+      path: "/grupo/configuracoes";
+      fullPath: "/grupo/configuracoes";
+      preLoaderRoute: typeof GrupoConfiguracoesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
+  GrupoConfiguracoesRoute: GrupoConfiguracoesRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

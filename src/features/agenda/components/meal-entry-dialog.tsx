@@ -1,4 +1,5 @@
 import type { MealStatus, MealType } from "@/features/agenda/model/meals";
+import { isTimeWithinWindow, type MealWindow } from "@/features/groups/model/meal-windows";
 
 export type MealDraft = { mealType: MealType; status: MealStatus; time: string };
 
@@ -11,12 +12,15 @@ const statusOptions: Array<{ value: MealStatus; label: string; description: stri
 
 type MealEntryDialogProps = {
   draft: MealDraft;
+  mealWindow: MealWindow;
   onChange: (draft: MealDraft) => void;
   onClose: () => void;
   onSave: () => void;
 };
 
-export function MealEntryDialog({ draft, onChange, onClose, onSave }: MealEntryDialogProps) {
+export function MealEntryDialog({ draft, mealWindow, onChange, onClose, onSave }: MealEntryDialogProps) {
+  const hasValidTime = draft.status === "NOT_GOING" || isTimeWithinWindow(draft.time, mealWindow);
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-end bg-black/35 p-0 backdrop-blur-[2px] sm:place-items-center sm:p-6" onMouseDown={onClose}>
       <section role="dialog" aria-modal="true" aria-labelledby="meal-dialog-title" className="w-full rounded-t-[28px] bg-white p-6 shadow-2xl sm:max-w-md sm:rounded-[28px]" onMouseDown={(event) => event.stopPropagation()}>
@@ -44,13 +48,16 @@ export function MealEntryDialog({ draft, onChange, onClose, onSave }: MealEntryD
         {draft.status !== "NOT_GOING" && (
           <div className="mt-5">
             <label className="block text-sm font-bold" htmlFor="meal-time">Horário</label>
-            <input id="meal-time" type="time" required value={draft.time} onChange={(event) => onChange({ ...draft, time: event.target.value })} className="mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 font-mono outline-none focus:border-[var(--tomato)]" />
+            <input id="meal-time" type="time" required min={mealWindow.openTime} max={mealWindow.closeTime} step={mealWindow.intervalMinutes * 60} value={draft.time} onChange={(event) => onChange({ ...draft, time: event.target.value })} className="mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 font-mono outline-none focus:border-[var(--tomato)]" />
+            <p className={`mt-2 text-xs ${hasValidTime ? "text-black/45" : "font-semibold text-red-600"}`}>
+              Permitido pelo grupo: {mealWindow.openTime}–{mealWindow.closeTime}, a cada {mealWindow.intervalMinutes} minutos.
+            </p>
           </div>
         )}
 
         <div className="mt-7 grid grid-cols-2 gap-3">
           <button type="button" onClick={onClose} className="rounded-2xl border border-black/10 px-4 py-3 text-sm font-bold">Cancelar</button>
-          <button type="button" onClick={onSave} disabled={draft.status !== "NOT_GOING" && !draft.time} className="rounded-2xl bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">Salvar</button>
+          <button type="button" onClick={onSave} disabled={!hasValidTime} className="rounded-2xl bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">Salvar</button>
         </div>
       </section>
     </div>

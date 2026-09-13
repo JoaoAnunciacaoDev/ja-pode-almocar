@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
 import type { DailyMeal, MealType } from "@/features/agenda/model/meals";
+import { loadMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 
 const initialMeals: DailyMeal[] = [
@@ -48,6 +49,7 @@ export function TodayPage() {
     }
   });
   const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00" });
+  const [mealWindows] = useState(loadMealWindows);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -149,7 +151,15 @@ export function TodayPage() {
           </section>
         </aside>
       </div>
-      {isDialogOpen && <MealEntryDialog draft={draft} onChange={changeDraft} onClose={() => setIsDialogOpen(false)} onSave={saveEntry} />}
+      {isDialogOpen && (
+        <MealEntryDialog
+          draft={draft}
+          mealWindow={mealWindows.find((window) => window.mealType === draft.mealType) ?? mealWindows[0]}
+          onChange={changeDraft}
+          onClose={() => setIsDialogOpen(false)}
+          onSave={saveEntry}
+        />
+      )}
     </AppShell>
   );
 }
