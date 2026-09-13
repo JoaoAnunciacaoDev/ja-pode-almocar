@@ -11,6 +11,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>Já pode almoçar?</span>
           </Link>
           <div className="flex items-center gap-3">
+            <Link to="/grupos" className="hidden rounded-full px-3 py-2 text-sm font-bold text-black/55 hover:bg-black/5 md:block">Meus grupos</Link>
             <Link to="/grupo/configuracoes" aria-label="Configurar grupo" className="grid size-9 place-items-center rounded-full text-sm font-bold text-[var(--tomato)] hover:bg-[var(--blush)] lg:flex lg:w-auto lg:px-3">
               <span className="lg:hidden">⚙️</span><span className="hidden lg:inline">Configurar grupo</span>
             </Link>

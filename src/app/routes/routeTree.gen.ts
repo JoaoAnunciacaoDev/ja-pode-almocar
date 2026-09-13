@@ -11,7 +11,15 @@
 import { Route as rootRouteImport } from "./../pages/__root";
 import { Route as IndexRouteImport } from "./../pages/index";
 import { Route as AgendaRouteImport } from "./../pages/agenda";
+import { Route as CadastroRouteImport } from "./../pages/cadastro";
+import { Route as EntrarRouteImport } from "./../pages/entrar";
+import { Route as EsqueciSenhaRouteImport } from "./../pages/esqueci-senha";
+import { Route as GruposRouteImport } from "./../pages/grupos";
+import { Route as ConviteCodeRouteImport } from "./../pages/convite.$code";
 import { Route as GrupoConfiguracoesRouteImport } from "./../pages/grupo.configuracoes";
+import { Route as GruposIndexRouteImport } from "./../pages/grupos.index";
+import { Route as GruposGroupIdRouteImport } from "./../pages/grupos.$groupId";
+import { Route as GruposNovoRouteImport } from "./../pages/grupos.novo";
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
@@ -23,39 +31,140 @@ const AgendaRoute = AgendaRouteImport.update({
   path: "/agenda",
   getParentRoute: () => rootRouteImport,
 } as any);
+const CadastroRoute = CadastroRouteImport.update({
+  id: "/cadastro",
+  path: "/cadastro",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const EntrarRoute = EntrarRouteImport.update({
+  id: "/entrar",
+  path: "/entrar",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const EsqueciSenhaRoute = EsqueciSenhaRouteImport.update({
+  id: "/esqueci-senha",
+  path: "/esqueci-senha",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const GruposRoute = GruposRouteImport.update({
+  id: "/grupos",
+  path: "/grupos",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ConviteCodeRoute = ConviteCodeRouteImport.update({
+  id: "/convite/$code",
+  path: "/convite/$code",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const GrupoConfiguracoesRoute = GrupoConfiguracoesRouteImport.update({
   id: "/grupo/configuracoes",
   path: "/grupo/configuracoes",
   getParentRoute: () => rootRouteImport,
 } as any);
+const GruposIndexRoute = GruposIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => GruposRoute,
+} as any);
+const GruposGroupIdRoute = GruposGroupIdRouteImport.update({
+  id: "/$groupId",
+  path: "/$groupId",
+  getParentRoute: () => GruposRoute,
+} as any);
+const GruposNovoRoute = GruposNovoRouteImport.update({
+  id: "/novo",
+  path: "/novo",
+  getParentRoute: () => GruposRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/cadastro": typeof CadastroRoute;
+  "/entrar": typeof EntrarRoute;
+  "/esqueci-senha": typeof EsqueciSenhaRoute;
+  "/grupos": typeof GruposRouteWithChildren;
+  "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
+  "/grupos/$groupId": typeof GruposGroupIdRoute;
+  "/grupos/novo": typeof GruposNovoRoute;
+  "/grupos/": typeof GruposIndexRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/cadastro": typeof CadastroRoute;
+  "/entrar": typeof EntrarRoute;
+  "/esqueci-senha": typeof EsqueciSenhaRoute;
+  "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
+  "/grupos/$groupId": typeof GruposGroupIdRoute;
+  "/grupos/novo": typeof GruposNovoRoute;
+  "/grupos": typeof GruposIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/cadastro": typeof CadastroRoute;
+  "/entrar": typeof EntrarRoute;
+  "/esqueci-senha": typeof EsqueciSenhaRoute;
+  "/grupos": typeof GruposRouteWithChildren;
+  "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
+  "/grupos/$groupId": typeof GruposGroupIdRoute;
+  "/grupos/novo": typeof GruposNovoRoute;
+  "/grupos/": typeof GruposIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/agenda" | "/grupo/configuracoes";
+  fullPaths:
+    | "/"
+    | "/agenda"
+    | "/cadastro"
+    | "/entrar"
+    | "/esqueci-senha"
+    | "/grupos"
+    | "/convite/$code"
+    | "/grupo/configuracoes"
+    | "/grupos/$groupId"
+    | "/grupos/novo"
+    | "/grupos/";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/agenda" | "/grupo/configuracoes";
-  id: "__root__" | "/" | "/agenda" | "/grupo/configuracoes";
+  to:
+    | "/"
+    | "/agenda"
+    | "/cadastro"
+    | "/entrar"
+    | "/esqueci-senha"
+    | "/convite/$code"
+    | "/grupo/configuracoes"
+    | "/grupos/$groupId"
+    | "/grupos/novo"
+    | "/grupos";
+  id:
+    | "__root__"
+    | "/"
+    | "/agenda"
+    | "/cadastro"
+    | "/entrar"
+    | "/esqueci-senha"
+    | "/grupos"
+    | "/convite/$code"
+    | "/grupo/configuracoes"
+    | "/grupos/$groupId"
+    | "/grupos/novo"
+    | "/grupos/";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AgendaRoute: typeof AgendaRoute;
+  CadastroRoute: typeof CadastroRoute;
+  EntrarRoute: typeof EntrarRoute;
+  EsqueciSenhaRoute: typeof EsqueciSenhaRoute;
+  GruposRoute: typeof GruposRouteWithChildren;
+  ConviteCodeRoute: typeof ConviteCodeRoute;
   GrupoConfiguracoesRoute: typeof GrupoConfiguracoesRoute;
 }
 
@@ -75,6 +184,41 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AgendaRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/cadastro": {
+      id: "/cadastro";
+      path: "/cadastro";
+      fullPath: "/cadastro";
+      preLoaderRoute: typeof CadastroRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/entrar": {
+      id: "/entrar";
+      path: "/entrar";
+      fullPath: "/entrar";
+      preLoaderRoute: typeof EntrarRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/esqueci-senha": {
+      id: "/esqueci-senha";
+      path: "/esqueci-senha";
+      fullPath: "/esqueci-senha";
+      preLoaderRoute: typeof EsqueciSenhaRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/grupos": {
+      id: "/grupos";
+      path: "/grupos";
+      fullPath: "/grupos";
+      preLoaderRoute: typeof GruposRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/convite/$code": {
+      id: "/convite/$code";
+      path: "/convite/$code";
+      fullPath: "/convite/$code";
+      preLoaderRoute: typeof ConviteCodeRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/grupo/configuracoes": {
       id: "/grupo/configuracoes";
       path: "/grupo/configuracoes";
@@ -82,12 +226,53 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof GrupoConfiguracoesRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/grupos/": {
+      id: "/grupos/";
+      path: "/";
+      fullPath: "/grupos/";
+      preLoaderRoute: typeof GruposIndexRouteImport;
+      parentRoute: typeof GruposRoute;
+    };
+    "/grupos/$groupId": {
+      id: "/grupos/$groupId";
+      path: "/$groupId";
+      fullPath: "/grupos/$groupId";
+      preLoaderRoute: typeof GruposGroupIdRouteImport;
+      parentRoute: typeof GruposRoute;
+    };
+    "/grupos/novo": {
+      id: "/grupos/novo";
+      path: "/novo";
+      fullPath: "/grupos/novo";
+      preLoaderRoute: typeof GruposNovoRouteImport;
+      parentRoute: typeof GruposRoute;
+    };
   }
 }
+
+interface GruposRouteChildren {
+  GruposGroupIdRoute: typeof GruposGroupIdRoute;
+  GruposNovoRoute: typeof GruposNovoRoute;
+  GruposIndexRoute: typeof GruposIndexRoute;
+}
+
+const GruposRouteChildren: GruposRouteChildren = {
+  GruposGroupIdRoute: GruposGroupIdRoute,
+  GruposNovoRoute: GruposNovoRoute,
+  GruposIndexRoute: GruposIndexRoute,
+};
+
+const GruposRouteWithChildren =
+  GruposRoute._addFileChildren(GruposRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
+  CadastroRoute: CadastroRoute,
+  EntrarRoute: EntrarRoute,
+  EsqueciSenhaRoute: EsqueciSenhaRoute,
+  GruposRoute: GruposRouteWithChildren,
+  ConviteCodeRoute: ConviteCodeRoute,
   GrupoConfiguracoesRoute: GrupoConfiguracoesRoute,
 };
 export const routeTree = rootRouteImport

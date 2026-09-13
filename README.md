@@ -32,6 +32,15 @@ src/
 
 O arquivo `src/app/routes/routeTree.gen.ts` é gerado automaticamente pelo plugin do TanStack Router.
 
+## Rotas do protótipo
+
+- `/entrar`, `/cadastro` e `/esqueci-senha`: acesso e recuperação de conta.
+- `/grupos`: lista de grupos.
+- `/grupos/novo`: criação de grupo.
+- `/grupos/:groupId`: integrantes e envio de convites.
+- `/convite/:code`: aceite de convite.
+- `/` e `/agenda`: agenda diária e semanal.
+
 ## Banco
 
 Com o Supabase CLI instalado e o projeto vinculado, aplique as migrations:
