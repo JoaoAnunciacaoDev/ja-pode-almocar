@@ -15,6 +15,7 @@ import { Route as CadastroRouteImport } from "./../pages/cadastro";
 import { Route as EntrarRouteImport } from "./../pages/entrar";
 import { Route as EsqueciSenhaRouteImport } from "./../pages/esqueci-senha";
 import { Route as GruposRouteImport } from "./../pages/grupos";
+import { Route as RedefinirSenhaRouteImport } from "./../pages/redefinir-senha";
 import { Route as ConviteCodeRouteImport } from "./../pages/convite.$code";
 import { Route as GrupoConfiguracoesRouteImport } from "./../pages/grupo.configuracoes";
 import { Route as GruposIndexRouteImport } from "./../pages/grupos.index";
@@ -51,6 +52,11 @@ const GruposRoute = GruposRouteImport.update({
   path: "/grupos",
   getParentRoute: () => rootRouteImport,
 } as any);
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: "/redefinir-senha",
+  path: "/redefinir-senha",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const ConviteCodeRoute = ConviteCodeRouteImport.update({
   id: "/convite/$code",
   path: "/convite/$code",
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
   "/grupos": typeof GruposRouteWithChildren;
+  "/redefinir-senha": typeof RedefinirSenhaRoute;
   "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
   "/grupos/$groupId": typeof GruposGroupIdRoute;
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   "/cadastro": typeof CadastroRoute;
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
+  "/redefinir-senha": typeof RedefinirSenhaRoute;
   "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
   "/grupos/$groupId": typeof GruposGroupIdRoute;
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
   "/grupos": typeof GruposRouteWithChildren;
+  "/redefinir-senha": typeof RedefinirSenhaRoute;
   "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
   "/grupos/$groupId": typeof GruposGroupIdRoute;
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | "/entrar"
     | "/esqueci-senha"
     | "/grupos"
+    | "/redefinir-senha"
     | "/convite/$code"
     | "/grupo/configuracoes"
     | "/grupos/$groupId"
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | "/cadastro"
     | "/entrar"
     | "/esqueci-senha"
+    | "/redefinir-senha"
     | "/convite/$code"
     | "/grupo/configuracoes"
     | "/grupos/$groupId"
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | "/entrar"
     | "/esqueci-senha"
     | "/grupos"
+    | "/redefinir-senha"
     | "/convite/$code"
     | "/grupo/configuracoes"
     | "/grupos/$groupId"
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute;
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute;
   GruposRoute: typeof GruposRouteWithChildren;
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute;
   ConviteCodeRoute: typeof ConviteCodeRoute;
   GrupoConfiguracoesRoute: typeof GrupoConfiguracoesRoute;
 }
@@ -210,6 +223,13 @@ declare module "@tanstack/react-router" {
       path: "/grupos";
       fullPath: "/grupos";
       preLoaderRoute: typeof GruposRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/redefinir-senha": {
+      id: "/redefinir-senha";
+      path: "/redefinir-senha";
+      fullPath: "/redefinir-senha";
+      preLoaderRoute: typeof RedefinirSenhaRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/convite/$code": {
@@ -272,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
   GruposRoute: GruposRouteWithChildren,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   ConviteCodeRoute: ConviteCodeRoute,
   GrupoConfiguracoesRoute: GrupoConfiguracoesRoute,
 };

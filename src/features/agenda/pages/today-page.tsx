@@ -1,61 +1,53 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { fetchDailyAgenda, saveDailyEntry } from "@/features/agenda/api/agenda-api";
+import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda as saveWeeklyAgendaRemote } from "@/features/agenda/api/weekly-agenda-api";
 import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
 import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialog";
-import { waitForPerson, type DailyMeal, type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
-import { cycleWeeklyTime, getWeeklyTime, loadWeeklyAgenda, saveWeeklyAgenda } from "@/features/agenda/model/weekly-agenda";
-import { isTimeWithinWindow, loadMealWindows } from "@/features/groups/model/meal-windows";
+import { type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
+import { cycleWeeklyTime, defaultWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { fetchGroups } from "@/features/groups/api/groups-api";
+import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
+import { getActiveGroup } from "@/features/groups/model/active-group";
+import { defaultMealWindows, isTimeWithinWindow } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 
-const initialMeals: DailyMeal[] = [
-  { type: "BREAKFAST", label: "Desjejum", emoji: "☕", people: [] },
-  {
-    type: "LUNCH", label: "Almoço", emoji: "🍛",
-    people: [
-      { id: "1", name: "João", time: "11:50", status: "CONFIRMED" },
-      { id: "2", name: "Maria", time: "12:00", status: "CONFIRMED" },
-      { id: "3", name: "Pedro", time: "12:00", status: "PLANNED" },
-      { id: "4", name: "Lucas", time: "12:30", status: "PLANNED" },
-    ],
-    mine: { id: "2", name: "Maria", time: "12:00", status: "CONFIRMED" },
-  },
-  {
-    type: "DINNER", label: "Jantar", emoji: "🌙",
-    people: [
-      { id: "5", name: "Ana", time: "18:00", status: "CONFIRMED" },
-      { id: "3", name: "Pedro", time: "18:20", status: "PLANNED" },
-    ],
-  },
-];
-
-const currentUser = { id: "2", name: "Maria" };
 const defaultTimes: Record<MealType, string> = { BREAKFAST: "08:00", LUNCH: "12:00", DINNER: "18:00" };
 
-const weekDays = [
-  { day: "Seg", date: "14" },
-  { day: "Ter", date: "15" },
-  { day: "Qua", date: "16" },
-  { day: "Qui", date: "17" },
-  { day: "Sex", date: "18" },
-];
+const weekDayNames = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+
+function dateInTimezone(timezone: string) {
+  const parts = new Intl.DateTimeFormat("pt-BR", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
 
 export function TodayPage() {
-  const [meals, setMeals] = useState<DailyMeal[]>(() => {
-    try {
-      const stored = localStorage.getItem("meal-agenda-demo");
-      return stored ? (JSON.parse(stored) as DailyMeal[]) : initialMeals;
-    } catch {
-      return initialMeals;
-    }
-  });
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const groupsQuery = useQuery({ queryKey: ["groups"], queryFn: fetchGroups });
+  const group = getActiveGroup(groupsQuery.data ?? []);
+  const weekDates = useMemo(() => getWorkWeekDates(), []);
+  const date = dateInTimezone(group?.timezone ?? "America/Sao_Paulo");
+  const agendaQuery = useQuery({ queryKey: ["daily-agenda", group?.id, date], queryFn: () => fetchDailyAgenda(group!.id, date, user!.id), enabled: Boolean(group && user) });
+  const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
+  const weeklyQuery = useQuery({ queryKey: ["weekly-agenda", group?.id, weekDates[0]], queryFn: () => fetchWeeklyAgenda(group!.id, user!.id, weekDates), enabled: Boolean(group && user) });
+  const meals = agendaQuery.data ?? [];
   const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00" });
-  const [mealWindows] = useState(loadMealWindows);
-  const [weeklyRows, setWeeklyRows] = useState(loadWeeklyAgenda);
+  const mealWindows = windowsQuery.data ?? defaultMealWindows;
+  const [weeklyRowsOverride, setWeeklyRowsOverride] = useState<typeof defaultWeeklyAgenda | null>(null);
+  const weeklyRows = weeklyRowsOverride ?? weeklyQuery.data ?? defaultWeeklyAgenda;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [waitTarget, setWaitTarget] = useState<{ mealType: MealType; person: MealOccurrence } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const entryMutation = useMutation({
+    mutationFn: saveDailyEntry,
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["daily-agenda", group?.id, date] }); },
+  });
 
   const today = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long", day: "numeric", month: "long", timeZone: "America/Sao_Paulo",
@@ -89,53 +81,31 @@ export function TodayPage() {
     setDraft(next);
   }
 
-  function saveEntry() {
-    const occurrence = {
-      ...currentUser,
-      status: draft.status,
-      time: draft.status === "NOT_GOING" ? null : draft.time,
-    };
-
-    setMeals((currentMeals) => {
-      const nextMeals = currentMeals.map((meal) => {
-        if (meal.type !== draft.mealType) return meal;
-        const otherPeople = meal.people.filter((person) => person.id !== currentUser.id);
-        const people = draft.status === "NOT_GOING" ? otherPeople : [...otherPeople, occurrence]
-          .sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
-        return { ...meal, people, mine: occurrence };
-      });
-      localStorage.setItem("meal-agenda-demo", JSON.stringify(nextMeals));
-      return nextMeals;
-    });
-
+  async function saveEntry() {
+    if (!group) return;
+    await entryMutation.mutateAsync({ groupId: group.id, date, mealType: draft.mealType, status: draft.status, time: draft.status === "NOT_GOING" ? null : draft.time });
     setIsDialogOpen(false);
-    setNotice("Seu horário foi atualizado neste protótipo.");
+    setNotice("Seu horário foi atualizado.");
   }
 
-  function confirmWaiting() {
-    if (!waitTarget) return;
-
-    setMeals((currentMeals) => {
-      const nextMeals = currentMeals.map((meal) =>
-        meal.type === waitTarget.mealType
-          ? waitForPerson(meal, currentUser, waitTarget.person)
-          : meal,
-      );
-      localStorage.setItem("meal-agenda-demo", JSON.stringify(nextMeals));
-      return nextMeals;
-    });
+  async function confirmWaiting() {
+    if (!waitTarget || !group) return;
+    await entryMutation.mutateAsync({ groupId: group.id, date, mealType: waitTarget.mealType, status: "PLANNED", time: null, waitingForUserId: waitTarget.person.id });
     setNotice(`Agora você está aguardando ${waitTarget.person.name}.`);
     setWaitTarget(null);
   }
 
-  function changeQuickWeekTime(mealType: MealType, dayIndex: number) {
-    setWeeklyRows((currentRows) => {
-      const nextRows = cycleWeeklyTime(currentRows, mealType, dayIndex, mealWindows);
-      saveWeeklyAgenda(nextRows);
-      return nextRows;
-    });
+  async function changeQuickWeekTime(mealType: MealType, dayIndex: number) {
+    if (!group || !user) return;
+    const nextRows = cycleWeeklyTime(weeklyRows, mealType, dayIndex, mealWindows);
+    setWeeklyRowsOverride(nextRows);
+    await saveWeeklyAgendaRemote(group.id, user.id, weekDates, nextRows);
+    await queryClient.invalidateQueries({ queryKey: ["weekly-agenda", group.id] });
     setNotice("Horário semanal atualizado.");
   }
+
+  if (groupsQuery.isLoading || agendaQuery.isLoading) return <AppShell><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando agenda…</div></AppShell>;
+  if (!group) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><p className="text-4xl">👥</p><h1 className="mt-5 font-serif text-3xl font-bold">Crie seu primeiro grupo</h1><p className="mt-3 text-sm text-black/45">Você precisa de um grupo para compartilhar horários.</p><Link to="/grupos/novo" className="mt-6 inline-block rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Criar grupo</Link></div></AppShell>;
 
   return (
     <AppShell>
@@ -173,13 +143,13 @@ export function TodayPage() {
               <Link to="/agenda" className="text-sm font-bold text-[var(--tomato)]">Editar</Link>
             </div>
             <div className="grid grid-cols-5 gap-2">
-              {weekDays.map((item, index) => (
-                <div key={item.day} className="text-center">
+              {weekDates.map((weekDate, index) => (
+                <div key={weekDate} className="text-center">
                   <div className={`rounded-2xl py-2 ${index === 0 ? "bg-[var(--lemon)]" : "bg-[var(--cream)]"}`}>
-                    <span className="block text-[10px] font-bold uppercase text-black/45">{item.day}</span><span className="text-lg font-extrabold">{item.date}</span>
+                    <span className="block text-[10px] font-bold uppercase text-black/45">{weekDayNames[index]}</span><span className="text-lg font-extrabold">{weekDate.slice(-2)}</span>
                   </div>
-                  <button type="button" onClick={() => changeQuickWeekTime("LUNCH", index)} aria-label={`Alterar almoço de ${item.day}`} className="mt-3 block w-full rounded-lg py-1 font-mono text-xs font-bold hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "LUNCH", index)}</button>
-                  <button type="button" onClick={() => changeQuickWeekTime("DINNER", index)} aria-label={`Alterar jantar de ${item.day}`} className="mt-1 block w-full rounded-lg py-1 font-mono text-xs text-black/40 hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "DINNER", index)}</button>
+                  <button type="button" onClick={() => changeQuickWeekTime("LUNCH", index)} aria-label={`Alterar almoço de ${weekDayNames[index]}`} className="mt-3 block w-full rounded-lg py-1 font-mono text-xs font-bold hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "LUNCH", index)}</button>
+                  <button type="button" onClick={() => changeQuickWeekTime("DINNER", index)} aria-label={`Alterar jantar de ${weekDayNames[index]}`} className="mt-1 block w-full rounded-lg py-1 font-mono text-xs text-black/40 hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "DINNER", index)}</button>
                 </div>
               ))}
             </div>

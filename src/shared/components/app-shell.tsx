@@ -1,7 +1,20 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { requireSupabaseClient } from "@/shared/utils/supabase-client";
+
 export function AppShell({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const displayName = String(user?.user_metadata.name || user?.email || "Usuário");
+  const initials = displayName.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+
+  async function signOut() {
+    await requireSupabaseClient().auth.signOut();
+    await navigate({ to: "/entrar" });
+  }
+
   return (
     <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
       <header className="border-b border-black/8 bg-white/80 backdrop-blur-xl">
@@ -15,13 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link to="/grupo/configuracoes" aria-label="Configurar grupo" className="grid size-9 place-items-center rounded-full text-sm font-bold text-[var(--tomato)] hover:bg-[var(--blush)] lg:flex lg:w-auto lg:px-3">
               <span className="lg:hidden">⚙️</span><span className="hidden lg:inline">Configurar grupo</span>
             </Link>
-            <label className="hidden sm:block">
-              <span className="sr-only">Grupo atual</span>
-              <select className="rounded-full border-0 bg-transparent px-4 py-2 text-sm font-semibold text-black/60 outline-none transition hover:bg-black/5">
-                <option>República do Bloco B</option>
-              </select>
-            </label>
-            <div className="grid size-10 place-items-center rounded-full bg-[var(--ink)] text-sm font-bold text-white">MA</div>
+            <button type="button" onClick={signOut} title={`${displayName} — sair`} aria-label="Sair da conta" className="grid size-10 place-items-center rounded-full bg-[var(--ink)] text-sm font-bold text-white transition hover:bg-[var(--tomato)]">{initials}</button>
           </div>
         </div>
       </header>

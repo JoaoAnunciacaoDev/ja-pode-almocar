@@ -3,16 +3,38 @@ import { useState, type FormEvent } from "react";
 
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { inputClassName, primaryButtonClassName } from "@/shared/components/form-styles";
+import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 export function SignupPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    localStorage.setItem("demo-session", "authenticated");
-    await navigate({ to: "/grupos" });
+    setErrorMessage(null);
+    const data = new FormData(event.currentTarget);
+    const { data: authData, error } = await requireSupabaseClient().auth.signUp({
+      email: String(data.get("email")),
+      password: String(data.get("password")),
+      options: {
+        data: { name: String(data.get("name")) },
+        emailRedirectTo: `${window.location.origin}/entrar`,
+      },
+    });
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+    if (authData.session) {
+      await navigate({ to: "/grupos" });
+      return;
+    }
+    setMessage("Conta criada. Confira seu e-mail para confirmar o cadastro.");
+    setLoading(false);
   }
 
   return (
@@ -21,7 +43,9 @@ export function SignupPage() {
         <label className="block text-sm font-bold">Nome<input className={inputClassName} name="name" autoComplete="name" placeholder="Como seus amigos te chamam?" required /></label>
         <label className="block text-sm font-bold">E-mail<input className={inputClassName} type="email" name="email" autoComplete="email" placeholder="voce@universidade.edu.br" required /></label>
         <label className="block text-sm font-bold">Senha<input className={inputClassName} type="password" name="password" autoComplete="new-password" minLength={6} placeholder="Mínimo de 6 caracteres" required /></label>
-        <button className={primaryButtonClassName} disabled={loading}>{loading ? "Criando…" : "Criar conta"}</button>
+        {errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}
+        {message && <p role="status" className="rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">{message}</p>}
+        <button className={primaryButtonClassName} disabled={loading || Boolean(message)}>{loading ? "Criando…" : "Criar conta"}</button>
       </form>
       <p className="mt-7 text-center text-sm text-black/50">Já possui uma conta? <Link to="/entrar" className="font-bold text-[var(--tomato)]">Entrar</Link></p>
     </AuthShell>

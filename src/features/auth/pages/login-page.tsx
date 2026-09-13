@@ -3,15 +3,27 @@ import { useState, type FormEvent } from "react";
 
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { inputClassName, primaryButtonClassName } from "@/shared/components/form-styles";
+import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    localStorage.setItem("demo-session", "authenticated");
+    setErrorMessage(null);
+    const data = new FormData(event.currentTarget);
+    const { error } = await requireSupabaseClient().auth.signInWithPassword({
+      email: String(data.get("email")),
+      password: String(data.get("password")),
+    });
+    if (error) {
+      setErrorMessage(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : error.message);
+      setLoading(false);
+      return;
+    }
     await navigate({ to: "/grupos" });
   }
 
@@ -20,10 +32,10 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block text-sm font-bold">E-mail<input className={inputClassName} type="email" name="email" autoComplete="email" placeholder="voce@universidade.edu.br" required /></label>
         <div><div className="flex items-center justify-between"><label htmlFor="password" className="text-sm font-bold">Senha</label><Link to="/esqueci-senha" className="text-xs font-bold text-[var(--tomato)]">Esqueci minha senha</Link></div><input id="password" className={inputClassName} type="password" name="password" autoComplete="current-password" minLength={6} required /></div>
+        {errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}
         <button className={primaryButtonClassName} disabled={loading}>{loading ? "Entrando…" : "Entrar"}</button>
       </form>
       <p className="mt-7 text-center text-sm text-black/50">Ainda não tem conta? <Link to="/cadastro" className="font-bold text-[var(--tomato)]">Criar conta</Link></p>
-      <p className="mt-4 rounded-2xl bg-white/60 px-4 py-3 text-center text-xs text-black/40">Protótipo: qualquer e-mail e senha com 6 caracteres permitem continuar.</p>
     </AuthShell>
   );
 }

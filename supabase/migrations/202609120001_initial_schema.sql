@@ -32,7 +32,7 @@ create table public.group_members (
 create table public.group_invites (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.groups(id) on delete cascade,
-  code text not null unique default upper(encode(gen_random_bytes(5), 'hex')),
+  code text not null unique default upper(encode(extensions.gen_random_bytes(5), 'hex')),
   created_by uuid not null references public.profiles(id),
   expires_at timestamptz,
   revoked_at timestamptz,
