@@ -18,6 +18,7 @@ const messagePatterns: Array<[RegExp, string]> = [
   [/overlap|conflict/i, "Este período entra em conflito com outro já cadastrado."],
   [/network|failed to fetch/i, "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente."],
   [/rate limit|too many requests/i, "Muitas tentativas em pouco tempo. Aguarde um momento e tente novamente."],
+  [/transfer or delete owned groups first/i, "Transfira ou exclua os grupos que você possui antes de excluir a conta."],
 ];
 
 export function getErrorMessage(error: unknown, fallback = "Não foi possível concluir a ação. Tente novamente.") {
@@ -31,4 +32,3 @@ export function getErrorMessage(error: unknown, fallback = "Não foi possível c
 export function toAppError(error: unknown, fallback?: string) {
   return new Error(getErrorMessage(error, fallback));
 }
-
