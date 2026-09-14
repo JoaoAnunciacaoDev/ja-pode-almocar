@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { GroupSwitcher } from "@/features/groups/components/group-switcher";
+import { SiteFooter } from "@/shared/components/site-footer";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 export function AppShell({ children, groupSlug }: { children: ReactNode; groupSlug?: string }) {
@@ -17,7 +18,7 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
   }
 
   return (
-    <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
+    <main className="flex min-h-screen flex-col bg-[var(--sand)] text-[var(--ink)]">
       <header className="border-b border-black/8 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
           <Link to={groupSlug ? "/g/$groupSlug/hoje" : "/grupos"} params={groupSlug ? { groupSlug } : {}} className="flex items-center gap-3 font-bold tracking-tight">
@@ -45,7 +46,8 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
           </div>
         </div>
       </header>
-      {children}
+      <div className="flex-1">{children}</div>
+      <SiteFooter />
     </main>
   );
 }

@@ -9,6 +9,7 @@ import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
 import { buildTimeOptions, defaultMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
+import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 import { inputClassName } from "@/shared/components/form-styles";
 
@@ -38,6 +39,7 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const routinesQuery = useQuery({ queryKey: ["meal-routines", group?.id, user?.id], queryFn: () => fetchMealRoutines(group!.id, user!.id), enabled: Boolean(group && user) });
   const [draft, setDraft] = useState<MealRoutineInput>(defaultDraft);
+  const [routineToDelete, setRoutineToDelete] = useState<MealRoutineInput | null>(null);
   const windows = windowsQuery.data ?? defaultMealWindows;
   const selectedWindow = windows.find((window) => window.mealType === draft.mealType) ?? windows[0];
   const timeOptions = buildTimeOptions(selectedWindow);
@@ -107,10 +109,10 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
             {routinesQuery.error && <p role="alert" className="mt-5 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{routinesQuery.error.message}</p>}
             {deleteMutation.error && <p role="alert" className="mt-5 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{deleteMutation.error.message}</p>}
             {!routinesQuery.isLoading && !routinesQuery.data?.length && <div className="mt-5 rounded-[24px] border border-dashed border-black/15 bg-white/50 p-8 text-center"><p className="text-3xl">🗓️</p><p className="mt-3 font-bold">Nenhuma rotina cadastrada</p><p className="mt-1 text-sm text-black/45">Use o formulário para criar seu primeiro horário recorrente.</p></div>}
-            <div className="mt-5 space-y-3">{routinesQuery.data?.map((routine) => <article key={routine.id} className="flex flex-col justify-between gap-4 rounded-[24px] border border-black/8 bg-white p-5 shadow-[0_12px_35px_rgba(42,35,28,.05)] sm:flex-row sm:items-center"><div><div className="flex flex-wrap items-center gap-2"><span className="font-extrabold">{weekdays.find((day) => day.value === routine.weekday)?.label}</span><span className="rounded-full bg-[var(--blush)] px-2.5 py-1 text-xs font-bold text-[var(--tomato-dark)]">{mealLabels[routine.mealType]}</span><span className="font-mono text-sm font-bold">{formatMealAvailability(routine.time, routine.availableUntil)}</span></div><p className="mt-2 text-xs text-black/40">De {new Date(`${routine.startDate}T12:00:00`).toLocaleDateString("pt-BR")} até {new Date(`${routine.endDate}T12:00:00`).toLocaleDateString("pt-BR")}</p></div><div className="flex gap-2"><button type="button" onClick={() => { saveMutation.reset(); setDraft(routine); }} className="rounded-xl border border-black/10 px-3 py-2 text-xs font-bold">Editar</button><button type="button" disabled={deleteMutation.isPending} onClick={() => { if (window.confirm("Excluir esta rotina? As exceções já salvas continuarão na agenda.")) deleteMutation.mutate(routine.id); }} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Excluir</button></div></article>)}</div>
+            <div className="mt-5 space-y-3">{routinesQuery.data?.map((routine) => <article key={routine.id} className="flex flex-col justify-between gap-4 rounded-[24px] border border-black/8 bg-white p-5 shadow-[0_12px_35px_rgba(42,35,28,.05)] sm:flex-row sm:items-center"><div><div className="flex flex-wrap items-center gap-2"><span className="font-extrabold">{weekdays.find((day) => day.value === routine.weekday)?.label}</span><span className="rounded-full bg-[var(--blush)] px-2.5 py-1 text-xs font-bold text-[var(--tomato-dark)]">{mealLabels[routine.mealType]}</span><span className="font-mono text-sm font-bold">{formatMealAvailability(routine.time, routine.availableUntil)}</span></div><p className="mt-2 text-xs text-black/40">De {new Date(`${routine.startDate}T12:00:00`).toLocaleDateString("pt-BR")} até {new Date(`${routine.endDate}T12:00:00`).toLocaleDateString("pt-BR")}</p></div><div className="flex gap-2"><button type="button" onClick={() => { saveMutation.reset(); setDraft(routine); }} className="rounded-xl border border-black/10 px-3 py-2 text-xs font-bold">Editar</button><button type="button" disabled={deleteMutation.isPending} onClick={() => setRoutineToDelete(routine)} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Excluir</button></div></article>)}</div>
           </section>
         </div>
-      </div>
+      </div><ConfirmDialog open={Boolean(routineToDelete)} title="Excluir esta rotina?" description="A rotina recorrente será removida. Ajustes já salvos em datas específicas continuarão na agenda." confirmLabel="Excluir rotina" pending={deleteMutation.isPending} tone="danger" onCancel={() => setRoutineToDelete(null)} onConfirm={() => { const id = routineToDelete?.id; setRoutineToDelete(null); if (id) deleteMutation.mutate(id); }} />
     </AppShell>
   );
 }
