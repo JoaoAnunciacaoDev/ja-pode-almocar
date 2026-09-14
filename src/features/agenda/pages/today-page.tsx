@@ -64,6 +64,11 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
     setWeeklyRowsOverride(null);
   }
 
+  function selectDate(nextDate: string) {
+    setSelectedDate(nextDate === currentDate ? null : nextDate);
+    setWeeklyRowsOverride(null);
+  }
+
   function openEditor(mealType: MealType = "LUNCH") {
     const existing = meals.find((meal) => meal.type === mealType)?.mine;
     const window = mealWindows.find((item) => item.mealType === mealType) ?? mealWindows[0];
@@ -158,16 +163,17 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
             <div className="grid grid-cols-5 gap-2">
               {weekDates.map((weekDate, index) => (
                 <div key={weekDate} className="text-center">
-                  <div className={`rounded-2xl py-2 ${index === 0 ? "bg-[var(--lemon)]" : "bg-[var(--cream)]"}`}>
+                  <button type="button" onClick={() => selectDate(weekDate)} aria-label={`Ver agenda de ${weekDayNames[index]}, dia ${weekDate.slice(-2)}`} aria-current={weekDate === date ? "date" : undefined} className={`w-full rounded-2xl py-2 transition hover:bg-[var(--peach)] ${weekDate === date ? "bg-[var(--lemon)] ring-2 ring-[var(--tomato)]/20" : "bg-[var(--cream)]"}`}>
                     <span className="block text-[10px] font-bold uppercase text-black/45">{weekDayNames[index]}</span><span className="text-lg font-extrabold">{weekDate.slice(-2)}</span>
-                  </div>
-                  <button type="button" onClick={() => changeQuickWeekTime("LUNCH", index)} aria-label={`Alterar almoço de ${weekDayNames[index]}`} className="mt-3 block w-full rounded-lg py-1 font-mono text-xs font-bold hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "LUNCH", index)}</button>
+                  </button>
+                  <button type="button" onClick={() => changeQuickWeekTime("BREAKFAST", index)} aria-label={`Alterar desjejum de ${weekDayNames[index]}`} className="mt-3 block w-full rounded-lg py-1 font-mono text-xs text-black/40 hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "BREAKFAST", index)}</button>
+                  <button type="button" onClick={() => changeQuickWeekTime("LUNCH", index)} aria-label={`Alterar almoço de ${weekDayNames[index]}`} className="mt-1 block w-full rounded-lg py-1 font-mono text-xs font-bold hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "LUNCH", index)}</button>
                   <button type="button" onClick={() => changeQuickWeekTime("DINNER", index)} aria-label={`Alterar jantar de ${weekDayNames[index]}`} className="mt-1 block w-full rounded-lg py-1 font-mono text-xs text-black/40 hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "DINNER", index)}</button>
                 </div>
               ))}
             </div>
-            <div className="mt-5 flex items-center gap-5 border-t border-black/7 pt-4 text-xs text-black/45"><span>🍛 almoço</span><span>🌙 jantar</span></div>
-            <p className="mt-3 text-[11px] text-black/35">Clique em um horário para avançar um intervalo.</p>
+            <div className="mt-5 flex flex-wrap items-center gap-5 border-t border-black/7 pt-4 text-xs text-black/45"><span>☕ desjejum</span><span>🍛 almoço</span><span>🌙 jantar</span></div>
+            <p className="mt-3 text-[11px] text-black/35">Clique em um dia para abrir sua agenda. Clique em um horário para avançar um intervalo.</p>
           </section>
           <section className="rounded-[28px] bg-[var(--sage)] p-5 text-white shadow-[0_18px_50px_rgba(49,91,72,.18)]">
             <p className="text-3xl">{pendingConfirmations ? "👋" : "✓"}</p><h2 className="mt-3 text-xl font-bold">{pendingConfirmations ? `${pendingConfirmations} ${pendingConfirmations === 1 ? "confirmação pendente" : "confirmações pendentes"}` : "Tudo confirmado por hoje"}</h2>

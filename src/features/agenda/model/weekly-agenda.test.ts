@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { cycleWeeklyTime, getWeeklyTime, type WeeklyAgendaRow } from "./weekly-agenda";
+import { clearWeeklyTime, cycleWeeklyTime, getWeeklyTime, type WeeklyAgendaRow } from "./weekly-agenda";
 
 const weeklyAgendaFixture: WeeklyAgendaRow[] = [
   { mealType: "BREAKFAST", meal: "Desjejum", values: ["—", "08:00", "—", "08:10", "—"] },
@@ -25,5 +25,12 @@ describe("weekly agenda interactions", () => {
     const rows = weeklyAgendaFixture.map((row) => row.mealType === "LUNCH" ? { ...row, values: ["12:30–13:00", ...row.values.slice(1)] } : row);
     const updated = cycleWeeklyTime(rows, "LUNCH", 0, defaultMealWindows);
     expect(getWeeklyTime(updated, "LUNCH", 0)).toBe("12:40–13:10");
+  });
+
+  test("clears one meal without cycling through the available times", () => {
+    const updated = clearWeeklyTime(weeklyAgendaFixture, "LUNCH", 2);
+    expect(getWeeklyTime(updated, "LUNCH", 2)).toBe("—");
+    expect(getWeeklyTime(updated, "LUNCH", 1)).toBe("11:30");
+    expect(getWeeklyTime(updated, "DINNER", 2)).toBe("17:30");
   });
 });

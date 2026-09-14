@@ -40,6 +40,12 @@ export function cycleWeeklyTime(
   });
 }
 
+export function clearWeeklyTime(rows: WeeklyAgendaRow[], mealType: MealType, columnIndex: number) {
+  return rows.map((row) => row.mealType === mealType
+    ? { ...row, values: row.values.map((value, index) => index === columnIndex ? "—" : value) }
+    : row);
+}
+
 export function getWeeklyTime(rows: WeeklyAgendaRow[], mealType: MealType, columnIndex: number) {
   return rows.find((row) => row.mealType === mealType)?.values[columnIndex] ?? "—";
 }

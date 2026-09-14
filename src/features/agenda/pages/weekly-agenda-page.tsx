@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda } from "@/features/agenda/api/weekly-agenda-api";
-import { cycleWeeklyTime, emptyWeeklyAgenda, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
+import { clearWeeklyTime, cycleWeeklyTime, emptyWeeklyAgenda, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
@@ -40,6 +40,11 @@ export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
     setRowsOverride(cycleWeeklyTime(rows, rows[rowIndex].mealType, columnIndex, windows));
   }
 
+  function clearTime(rowIndex: number, columnIndex: number) {
+    saveMutation.reset();
+    setRowsOverride(clearWeeklyTime(rows, rows[rowIndex].mealType, columnIndex));
+  }
+
   if (groupQuery.isLoading || weekQuery.isLoading) return <AppShell groupSlug={groupSlug}><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando sua semana…</div></AppShell>;
   if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Grupo não encontrado</h1><Link to="/grupos" className="mt-6 inline-block font-bold text-[var(--tomato)]">Ver meus grupos</Link></div></AppShell>;
 
@@ -53,14 +58,19 @@ export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
         </div>
         {saveMutation.isSuccess && <p role="status" className="mt-5 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">✓ Alterações salvas no grupo.</p>}
         {(weekQuery.error || saveMutation.error) && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{weekQuery.error?.message || saveMutation.error?.message}</p>}
-        <p className="mt-5 text-sm text-black/50">Clique em um horário para alterá-lo. As opções respeitam os limites definidos pelo proprietário; “—” indica que você não irá.</p>
+        <p className="mt-5 text-sm text-black/50">Clique em um horário para avançar pelas opções ou use “×” para removê-lo. Os horários respeitam os limites definidos pelo proprietário; “—” indica que você não irá.</p>
         <div className="mt-8 overflow-x-auto rounded-[28px] border border-black/8 bg-white p-5 shadow-[0_18px_60px_rgba(42,35,28,.07)]">
           <div className="grid min-w-[680px] grid-cols-[160px_repeat(5,1fr)] gap-2">
             <div />
             {dates.map((date, index) => <div key={date} className="rounded-xl bg-[var(--cream)] px-3 py-3 text-center text-xs font-extrabold">{dayNames[index]} {date.slice(-2)}</div>)}
             {rows.flatMap((row, rowIndex) => [
               <div key={`${row.meal}-label`} className="flex items-center font-bold">{row.meal}</div>,
-              ...row.values.map((value, index) => <button type="button" onClick={() => cycleTime(rowIndex, index)} key={`${row.meal}-${index}`} aria-label={`${row.meal}, alterar horário de ${value}`} className="rounded-xl border border-black/8 px-3 py-4 font-mono text-sm font-bold hover:border-[var(--tomato)] hover:bg-[var(--blush)]">{value}</button>),
+              ...row.values.map((value, index) => (
+                <div key={`${row.meal}-${index}`} className="relative">
+                  <button type="button" onClick={() => cycleTime(rowIndex, index)} aria-label={`${row.meal}, alterar horário de ${value}`} className="h-full min-h-14 w-full rounded-xl border border-black/8 px-3 py-4 pr-9 font-mono text-sm font-bold hover:border-[var(--tomato)] hover:bg-[var(--blush)]">{value}</button>
+                  <button type="button" disabled={value === "—"} onClick={() => clearTime(rowIndex, index)} aria-label={`${row.meal}, remover horário de ${dayNames[index]}`} title="Remover horário" className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-lg text-base font-bold text-black/35 hover:bg-red-50 hover:text-red-700 disabled:cursor-default disabled:opacity-20">×</button>
+                </div>
+              )),
             ])}
           </div>
         </div>
