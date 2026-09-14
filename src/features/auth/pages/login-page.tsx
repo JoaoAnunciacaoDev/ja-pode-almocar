@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { inputClassName, primaryButtonClassName } from "@/shared/components/form-styles";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
+import { getErrorMessage } from "@/shared/utils/app-error";
 
 export function LoginPage({ inviteCode }: { inviteCode?: string }) {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function LoginPage({ inviteCode }: { inviteCode?: string }) {
       password: String(data.get("password")),
     });
     if (error) {
-      setErrorMessage(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : error.message);
+      setErrorMessage(getErrorMessage(error));
       setLoading(false);
       return;
     }

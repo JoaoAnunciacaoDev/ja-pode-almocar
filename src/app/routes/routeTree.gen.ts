@@ -18,6 +18,7 @@ import { Route as GRouteImport } from "./../pages/g";
 import { Route as GruposRouteImport } from "./../pages/grupos";
 import { Route as RedefinirSenhaRouteImport } from "./../pages/redefinir-senha";
 import { Route as ConfiguracoesNotificacoesRouteImport } from "./../pages/configuracoes.notificacoes";
+import { Route as ConfiguracoesPerfilRouteImport } from "./../pages/configuracoes.perfil";
 import { Route as ConviteCodeRouteImport } from "./../pages/convite.$code";
 import { Route as GGroupSlugRouteImport } from "./../pages/g.$groupSlug";
 import { Route as GrupoConfiguracoesRouteImport } from "./../pages/grupo.configuracoes";
@@ -80,6 +81,11 @@ const ConfiguracoesNotificacoesRoute =
     path: "/configuracoes/notificacoes",
     getParentRoute: () => rootRouteImport,
   } as any);
+const ConfiguracoesPerfilRoute = ConfiguracoesPerfilRouteImport.update({
+  id: "/configuracoes/perfil",
+  path: "/configuracoes/perfil",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const ConviteCodeRoute = ConviteCodeRouteImport.update({
   id: "/convite/$code",
   path: "/convite/$code",
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   "/grupos": typeof GruposRouteWithChildren;
   "/redefinir-senha": typeof RedefinirSenhaRoute;
   "/configuracoes/notificacoes": typeof ConfiguracoesNotificacoesRoute;
+  "/configuracoes/perfil": typeof ConfiguracoesPerfilRoute;
   "/convite/$code": typeof ConviteCodeRoute;
   "/g/$groupSlug": typeof GGroupSlugRouteWithChildren;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   "/g": typeof GRouteWithChildren;
   "/redefinir-senha": typeof RedefinirSenhaRoute;
   "/configuracoes/notificacoes": typeof ConfiguracoesNotificacoesRoute;
+  "/configuracoes/perfil": typeof ConfiguracoesPerfilRoute;
   "/convite/$code": typeof ConviteCodeRoute;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
   "/grupos/novo": typeof GruposNovoRoute;
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   "/grupos": typeof GruposRouteWithChildren;
   "/redefinir-senha": typeof RedefinirSenhaRoute;
   "/configuracoes/notificacoes": typeof ConfiguracoesNotificacoesRoute;
+  "/configuracoes/perfil": typeof ConfiguracoesPerfilRoute;
   "/convite/$code": typeof ConviteCodeRoute;
   "/g/$groupSlug": typeof GGroupSlugRouteWithChildren;
   "/grupo/configuracoes": typeof GrupoConfiguracoesRoute;
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | "/grupos"
     | "/redefinir-senha"
     | "/configuracoes/notificacoes"
+    | "/configuracoes/perfil"
     | "/convite/$code"
     | "/g/$groupSlug"
     | "/grupo/configuracoes"
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | "/g"
     | "/redefinir-senha"
     | "/configuracoes/notificacoes"
+    | "/configuracoes/perfil"
     | "/convite/$code"
     | "/grupo/configuracoes"
     | "/grupos/novo"
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | "/grupos"
     | "/redefinir-senha"
     | "/configuracoes/notificacoes"
+    | "/configuracoes/perfil"
     | "/convite/$code"
     | "/g/$groupSlug"
     | "/grupo/configuracoes"
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   GruposRoute: typeof GruposRouteWithChildren;
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute;
   ConfiguracoesNotificacoesRoute: typeof ConfiguracoesNotificacoesRoute;
+  ConfiguracoesPerfilRoute: typeof ConfiguracoesPerfilRoute;
   ConviteCodeRoute: typeof ConviteCodeRoute;
   GrupoConfiguracoesRoute: typeof GrupoConfiguracoesRoute;
 }
@@ -388,6 +401,13 @@ declare module "@tanstack/react-router" {
       path: "/configuracoes/notificacoes";
       fullPath: "/configuracoes/notificacoes";
       preLoaderRoute: typeof ConfiguracoesNotificacoesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/configuracoes/perfil": {
+      id: "/configuracoes/perfil";
+      path: "/configuracoes/perfil";
+      fullPath: "/configuracoes/perfil";
+      preLoaderRoute: typeof ConfiguracoesPerfilRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/convite/$code": {
@@ -571,6 +591,7 @@ const rootRouteChildren: RootRouteChildren = {
   GruposRoute: GruposRouteWithChildren,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   ConfiguracoesNotificacoesRoute: ConfiguracoesNotificacoesRoute,
+  ConfiguracoesPerfilRoute: ConfiguracoesPerfilRoute,
   ConviteCodeRoute: ConviteCodeRoute,
   GrupoConfiguracoesRoute: GrupoConfiguracoesRoute,
 };

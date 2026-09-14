@@ -37,6 +37,7 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
                   <p className="truncate text-sm font-extrabold">{displayName}</p>
                   <p className="mt-0.5 truncate text-xs text-black/40">{user?.email}</p>
                 </div>
+                <Link to="/configuracoes/perfil" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><span aria-hidden="true">👤</span> Configurações do perfil</Link>
                 <Link to="/configuracoes/notificacoes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><span aria-hidden="true">🔔</span> Configurações de notificações</Link>
                 <button type="button" onClick={signOut} className="flex w-full items-center gap-3 border-t border-black/7 px-4 py-3 text-left text-sm font-bold text-[var(--tomato-dark)] transition hover:bg-[var(--blush)]"><span aria-hidden="true">↪</span> Sair da conta</button>
               </div>

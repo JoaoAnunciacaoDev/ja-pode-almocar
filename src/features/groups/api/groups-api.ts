@@ -1,4 +1,5 @@
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
+import { toAppError } from "@/shared/utils/app-error";
 
 export type GroupSummary = {
   id: string;
@@ -38,7 +39,7 @@ export async function createGroup(name: string, institution: string) {
     group_institution: institution,
     group_timezone: "America/Sao_Paulo",
   });
-  if (error) throw error;
+  if (error) throw toAppError(error);
   return fetchGroupLocator(data as string);
 }
 
@@ -122,6 +123,15 @@ export async function transferGroupOwnership(groupId: string, newOwnerId: string
 export async function deleteGroup(groupId: string) {
   const { error } = await requireSupabaseClient().rpc("delete_group", { target_group_id: groupId });
   if (error) throw error;
+}
+
+export async function updateGroup(groupId: string, input: { name: string; institution: string; timezone: string }) {
+  const { error } = await requireSupabaseClient().from("groups").update({
+    name: input.name.trim(),
+    institution: input.institution.trim(),
+    timezone: input.timezone,
+  }).eq("id", groupId);
+  if (error) throw toAppError(error);
 }
 
 export async function fetchInvitePreview(code: string): Promise<GroupInvitePreview | null> {
