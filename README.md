@@ -68,7 +68,6 @@ bun run build
 
 ## Próximos incrementos
 
-- gestão de integrantes, saída e transferência de propriedade;
-- revogação e regeneração de convites;
 - tarefas de e-mail semanais e diárias.
 - testes E2E dos fluxos de autenticação, convite e agenda.
+- tratamento centralizado e tradução de erros do Supabase.

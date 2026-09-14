@@ -36,7 +36,7 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const weeklyQuery = useQuery({ queryKey: ["weekly-agenda", group?.id, weekDates[0]], queryFn: () => fetchWeeklyAgenda(group!.id, user!.id, weekDates), enabled: Boolean(group && user) });
   const meals = agendaQuery.data ?? [];
-  const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00" });
+  const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00", availableUntil: null });
   const mealWindows = windowsQuery.data ?? defaultMealWindows;
   const [weeklyRowsOverride, setWeeklyRowsOverride] = useState<typeof defaultWeeklyAgenda | null>(null);
   const weeklyRows = weeklyRowsOverride ?? weeklyQuery.data ?? defaultWeeklyAgenda;
@@ -60,6 +60,7 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
       mealType,
       status: existing?.status ?? "PLANNED",
       time: time ?? defaultTimes[mealType],
+      availableUntil: existing?.availableUntil ?? null,
     });
     setIsDialogOpen(true);
     setNotice(null);
@@ -74,6 +75,7 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
         mealType: next.mealType,
         status: existing?.status ?? "PLANNED",
         time: time ?? defaultTimes[next.mealType],
+        availableUntil: existing?.availableUntil ?? null,
       });
       return;
     }
@@ -82,14 +84,14 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
 
   async function saveEntry() {
     if (!group) return;
-    await entryMutation.mutateAsync({ groupId: group.id, date, mealType: draft.mealType, status: draft.status, time: draft.status === "NOT_GOING" ? null : draft.time });
+    await entryMutation.mutateAsync({ groupId: group.id, date, mealType: draft.mealType, status: draft.status, time: draft.status === "NOT_GOING" ? null : draft.time, availableUntil: draft.status === "NOT_GOING" ? null : draft.availableUntil });
     setIsDialogOpen(false);
     setNotice("Seu horário foi atualizado.");
   }
 
   async function confirmWaiting() {
     if (!waitTarget || !group) return;
-    await entryMutation.mutateAsync({ groupId: group.id, date, mealType: waitTarget.mealType, status: "PLANNED", time: null, waitingForUserId: waitTarget.person.id });
+    await entryMutation.mutateAsync({ groupId: group.id, date, mealType: waitTarget.mealType, status: "PLANNED", time: null, availableUntil: null, waitingForUserId: waitTarget.person.id });
     setNotice(`Agora você está aguardando ${waitTarget.person.name}.`);
     setWaitTarget(null);
   }

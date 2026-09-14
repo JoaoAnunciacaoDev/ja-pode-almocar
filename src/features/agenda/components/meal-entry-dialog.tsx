@@ -1,7 +1,7 @@
 import type { MealStatus, MealType } from "@/features/agenda/model/meals";
 import { buildTimeOptions, isTimeWithinWindow, type MealWindow } from "@/features/groups/model/meal-windows";
 
-export type MealDraft = { mealType: MealType; status: MealStatus; time: string };
+export type MealDraft = { mealType: MealType; status: MealStatus; time: string; availableUntil: string | null };
 
 const mealLabels: Record<MealType, string> = { BREAKFAST: "Desjejum", LUNCH: "Almoço", DINNER: "Jantar" };
 const statusOptions: Array<{ value: MealStatus; label: string; description: string }> = [
@@ -19,13 +19,19 @@ type MealEntryDialogProps = {
 };
 
 export function MealEntryDialog({ draft, mealWindow, onChange, onClose, onSave }: MealEntryDialogProps) {
-  const hasValidTime = draft.status === "NOT_GOING" || isTimeWithinWindow(draft.time, mealWindow);
   const timeOptions = buildTimeOptions(mealWindow);
   const selectedTimeIndex = Math.max(0, timeOptions.indexOf(draft.time));
+  const endTimeOptions = timeOptions.slice(selectedTimeIndex + 1);
+  const hasValidTime = draft.status === "NOT_GOING" || (
+    isTimeWithinWindow(draft.time, mealWindow) &&
+    (!draft.availableUntil || (draft.availableUntil > draft.time && isTimeWithinWindow(draft.availableUntil, mealWindow)))
+  );
 
   function moveTime(direction: -1 | 1) {
     const nextIndex = Math.min(timeOptions.length - 1, Math.max(0, selectedTimeIndex + direction));
-    onChange({ ...draft, time: timeOptions[nextIndex] });
+    const nextTime = timeOptions[nextIndex];
+    const nextEnd = draft.availableUntil && draft.availableUntil > nextTime ? draft.availableUntil : timeOptions[nextIndex + 1] ?? null;
+    onChange({ ...draft, time: nextTime, availableUntil: draft.availableUntil ? nextEnd : null });
   }
 
   return (
@@ -63,6 +69,11 @@ export function MealEntryDialog({ draft, mealWindow, onChange, onClose, onSave }
             <p className={`mt-2 text-xs ${hasValidTime ? "text-black/45" : "font-semibold text-red-600"}`}>
               Permitido pelo grupo: {mealWindow.openTime}–{mealWindow.closeTime}, a cada {mealWindow.intervalMinutes} minutos.
             </p>
+            <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm font-bold">
+              <input type="checkbox" checked={draft.availableUntil !== null} disabled={!endTimeOptions.length} onChange={(event) => onChange({ ...draft, availableUntil: event.target.checked ? endTimeOptions[0] : null })} className="size-4 accent-[var(--tomato)]" />
+              Informar intervalo de disponibilidade
+            </label>
+            {draft.availableUntil && <label className="mt-4 block text-sm font-bold">Disponível até<select value={draft.availableUntil} onChange={(event) => onChange({ ...draft, availableUntil: event.target.value })} className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 font-mono outline-none focus:border-[var(--tomato)]">{endTimeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>}
           </div>
         )}
 

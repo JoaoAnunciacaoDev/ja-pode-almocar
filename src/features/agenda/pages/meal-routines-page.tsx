@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 
 import { deleteMealRoutine, fetchMealRoutines, saveMealRoutine, type MealRoutineInput } from "@/features/agenda/api/meal-routines-api";
-import { mealTypes, type MealType } from "@/features/agenda/model/meals";
+import { formatMealAvailability, mealTypes, type MealType } from "@/features/agenda/model/meals";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
@@ -25,7 +25,7 @@ function defaultDraft(): MealRoutineInput {
   const start = new Date();
   const end = new Date(start);
   end.setMonth(end.getMonth() + 6);
-  return { weekday: 1, mealType: "LUNCH", time: "12:00", startDate: localDate(start), endDate: localDate(end) };
+  return { weekday: 1, mealType: "LUNCH", time: "12:00", availableUntil: null, startDate: localDate(start), endDate: localDate(end) };
 }
 
 export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
@@ -40,8 +40,11 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
   const selectedWindow = windows.find((window) => window.mealType === draft.mealType) ?? windows[0];
   const timeOptions = buildTimeOptions(selectedWindow);
   const selectedTime = timeOptions.includes(draft.time) ? draft.time : timeOptions[0];
+  const endTimeOptions = timeOptions.slice(timeOptions.indexOf(selectedTime) + 1);
+  const intervalEnabled = draft.availableUntil !== null && endTimeOptions.length > 0;
+  const selectedAvailableUntil = draft.availableUntil && endTimeOptions.includes(draft.availableUntil) ? draft.availableUntil : endTimeOptions[0];
   const saveMutation = useMutation({
-    mutationFn: () => saveMealRoutine(group!.id, user!.id, { ...draft, time: selectedTime }),
+    mutationFn: () => saveMealRoutine(group!.id, user!.id, { ...draft, time: selectedTime, availableUntil: intervalEnabled ? selectedAvailableUntil : null }),
     onSuccess: async () => {
       setDraft(defaultDraft());
       await Promise.all([
@@ -64,7 +67,7 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
 
   function changeMealType(mealType: MealType) {
     const window = windows.find((item) => item.mealType === mealType) ?? windows[0];
-    setDraft({ ...draft, mealType, time: buildTimeOptions(window)[0] });
+    setDraft({ ...draft, mealType, time: buildTimeOptions(window)[0], availableUntil: null });
   }
 
   function submit(event: FormEvent) {
@@ -86,7 +89,9 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
             <h2 className="text-xl font-extrabold">{draft.id ? "Editar rotina" : "Nova rotina"}</h2>
             <label className="mt-5 block text-sm font-bold">Dia da semana<select value={draft.weekday} onChange={(event) => setDraft({ ...draft, weekday: Number(event.target.value) })} className={inputClassName}>{weekdays.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}</select></label>
             <label className="mt-5 block text-sm font-bold">Refeição<select value={draft.mealType} onChange={(event) => changeMealType(event.target.value as MealType)} className={inputClassName}>{mealTypes.map((mealType) => <option key={mealType} value={mealType}>{mealLabels[mealType]}</option>)}</select></label>
-            <label className="mt-5 block text-sm font-bold">Horário<select value={selectedTime} onChange={(event) => setDraft({ ...draft, time: event.target.value })} className={inputClassName}>{timeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
+            <label className="mt-5 block text-sm font-bold">Horário<select value={selectedTime} onChange={(event) => { const time = event.target.value; setDraft({ ...draft, time, availableUntil: draft.availableUntil ? timeOptions.find((option) => option > time) ?? null : null }); }} className={inputClassName}>{timeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
+            <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm font-bold"><input type="checkbox" checked={intervalEnabled} disabled={!endTimeOptions.length} onChange={(event) => setDraft({ ...draft, availableUntil: event.target.checked ? endTimeOptions[0] : null })} className="size-4 accent-[var(--tomato)]" />Tenho uma janela de disponibilidade</label>
+            {intervalEnabled && <label className="mt-4 block text-sm font-bold">Disponível até<select value={selectedAvailableUntil} onChange={(event) => setDraft({ ...draft, availableUntil: event.target.value })} className={inputClassName}>{endTimeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>}
             <div className="mt-5 grid grid-cols-2 gap-3"><label className="text-sm font-bold">Início<input type="date" value={draft.startDate} onChange={(event) => setDraft({ ...draft, startDate: event.target.value })} className={inputClassName} required /></label><label className="text-sm font-bold">Fim<input type="date" min={draft.startDate} value={draft.endDate} onChange={(event) => setDraft({ ...draft, endDate: event.target.value })} className={inputClassName} required /></label></div>
             {draft.endDate < draft.startDate && <p role="alert" className="mt-4 text-sm font-semibold text-red-700">A data final deve ser igual ou posterior à inicial.</p>}
             {saveMutation.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{saveMutation.error.message}</p>}
@@ -100,7 +105,7 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
             {routinesQuery.error && <p role="alert" className="mt-5 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{routinesQuery.error.message}</p>}
             {deleteMutation.error && <p role="alert" className="mt-5 rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{deleteMutation.error.message}</p>}
             {!routinesQuery.isLoading && !routinesQuery.data?.length && <div className="mt-5 rounded-[24px] border border-dashed border-black/15 bg-white/50 p-8 text-center"><p className="text-3xl">🗓️</p><p className="mt-3 font-bold">Nenhuma rotina cadastrada</p><p className="mt-1 text-sm text-black/45">Use o formulário para criar seu primeiro horário recorrente.</p></div>}
-            <div className="mt-5 space-y-3">{routinesQuery.data?.map((routine) => <article key={routine.id} className="flex flex-col justify-between gap-4 rounded-[24px] border border-black/8 bg-white p-5 shadow-[0_12px_35px_rgba(42,35,28,.05)] sm:flex-row sm:items-center"><div><div className="flex flex-wrap items-center gap-2"><span className="font-extrabold">{weekdays.find((day) => day.value === routine.weekday)?.label}</span><span className="rounded-full bg-[var(--blush)] px-2.5 py-1 text-xs font-bold text-[var(--tomato-dark)]">{mealLabels[routine.mealType]}</span><span className="font-mono text-sm font-bold">{routine.time}</span></div><p className="mt-2 text-xs text-black/40">De {new Date(`${routine.startDate}T12:00:00`).toLocaleDateString("pt-BR")} até {new Date(`${routine.endDate}T12:00:00`).toLocaleDateString("pt-BR")}</p></div><div className="flex gap-2"><button type="button" onClick={() => { saveMutation.reset(); setDraft(routine); }} className="rounded-xl border border-black/10 px-3 py-2 text-xs font-bold">Editar</button><button type="button" disabled={deleteMutation.isPending} onClick={() => { if (window.confirm("Excluir esta rotina? As exceções já salvas continuarão na agenda.")) deleteMutation.mutate(routine.id); }} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Excluir</button></div></article>)}</div>
+            <div className="mt-5 space-y-3">{routinesQuery.data?.map((routine) => <article key={routine.id} className="flex flex-col justify-between gap-4 rounded-[24px] border border-black/8 bg-white p-5 shadow-[0_12px_35px_rgba(42,35,28,.05)] sm:flex-row sm:items-center"><div><div className="flex flex-wrap items-center gap-2"><span className="font-extrabold">{weekdays.find((day) => day.value === routine.weekday)?.label}</span><span className="rounded-full bg-[var(--blush)] px-2.5 py-1 text-xs font-bold text-[var(--tomato-dark)]">{mealLabels[routine.mealType]}</span><span className="font-mono text-sm font-bold">{formatMealAvailability(routine.time, routine.availableUntil)}</span></div><p className="mt-2 text-xs text-black/40">De {new Date(`${routine.startDate}T12:00:00`).toLocaleDateString("pt-BR")} até {new Date(`${routine.endDate}T12:00:00`).toLocaleDateString("pt-BR")}</p></div><div className="flex gap-2"><button type="button" onClick={() => { saveMutation.reset(); setDraft(routine); }} className="rounded-xl border border-black/10 px-3 py-2 text-xs font-bold">Editar</button><button type="button" disabled={deleteMutation.isPending} onClick={() => { if (window.confirm("Excluir esta rotina? As exceções já salvas continuarão na agenda.")) deleteMutation.mutate(routine.id); }} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Excluir</button></div></article>)}</div>
           </section>
         </div>
       </div>

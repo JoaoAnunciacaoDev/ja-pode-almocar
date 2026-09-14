@@ -13,8 +13,8 @@ export async function fetchDailyAgenda(groupId: string, date: string, currentUse
   const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
   const [group, routinesResult, entriesResult] = await Promise.all([
     fetchGroup(groupId),
-    client.from("meal_routines").select("user_id,meal_type,time").eq("group_id", groupId).eq("weekday", weekday).lte("start_date", date).gte("end_date", date),
-    client.from("meal_entries").select("user_id,meal_type,time,status,waiting_for_user_id").eq("group_id", groupId).eq("date", date),
+    client.from("meal_routines").select("user_id,meal_type,time,available_until").eq("group_id", groupId).eq("weekday", weekday).lte("start_date", date).gte("end_date", date),
+    client.from("meal_entries").select("user_id,meal_type,time,available_until,status,waiting_for_user_id").eq("group_id", groupId).eq("date", date),
   ]);
   if (routinesResult.error) throw routinesResult.error;
   if (entriesResult.error) throw entriesResult.error;
@@ -33,6 +33,7 @@ export async function fetchDailyAgenda(groupId: string, date: string, currentUse
         id: member.id,
         name: member.name,
         time: entry ? entry.time?.slice(0, 5) ?? null : routine!.time.slice(0, 5),
+        availableUntil: entry ? entry.available_until?.slice(0, 5) ?? null : routine!.available_until?.slice(0, 5) ?? null,
         status,
         ...(waitingFor ? { waitingFor: { id: waitingFor.id, name: waitingFor.name } } : {}),
       };
@@ -48,7 +49,7 @@ export async function fetchDailyAgenda(groupId: string, date: string, currentUse
   });
 }
 
-export async function saveDailyEntry(input: { groupId: string; date: string; mealType: MealType; time: string | null; status: MealStatus; waitingForUserId?: string | null }) {
+export async function saveDailyEntry(input: { groupId: string; date: string; mealType: MealType; time: string | null; availableUntil?: string | null; status: MealStatus; waitingForUserId?: string | null }) {
   const client = requireSupabaseClient();
   const { data: userData } = await client.auth.getUser();
   if (!userData.user) throw new Error("Autenticação necessária.");
@@ -58,6 +59,7 @@ export async function saveDailyEntry(input: { groupId: string; date: string; mea
     date: input.date,
     meal_type: input.mealType,
     time: input.time,
+    available_until: input.availableUntil ?? null,
     status: input.status,
     waiting_for_user_id: input.waitingForUserId ?? null,
   }, { onConflict: "group_id,user_id,date,meal_type" });

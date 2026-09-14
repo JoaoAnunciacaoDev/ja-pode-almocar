@@ -1,4 +1,4 @@
-import type { DailyMeal, MealOccurrence, MealStatus } from "@/features/agenda/model/meals";
+import { formatMealAvailability, type DailyMeal, type MealOccurrence, type MealStatus } from "@/features/agenda/model/meals";
 
 const statusLabel: Record<MealStatus, string> = { CONFIRMED: "Confirmado", PLANNED: "Planejado", NOT_GOING: "Não vai" };
 
@@ -32,7 +32,7 @@ export function MealCard({ meal, onEdit, onWaitFor }: MealCardProps) {
                 <span><span className="block text-sm font-bold">{person.name}{person.id === meal.mine?.id ? " (você)" : ""}</span><span className="block text-[11px] text-black/40">{person.waitingFor ? `Aguardando ${person.waitingFor.name}` : statusLabel[person.status]}</span></span>
               </span>
               <span className="flex items-center gap-2">
-                <time className="font-mono text-sm font-bold">{person.time ?? "—"}</time>
+                <time className="font-mono text-sm font-bold">{formatMealAvailability(person.time, person.availableUntil)}</time>
                 {person.id !== meal.mine?.id && person.time !== null && <span className="rounded-full bg-[var(--blush)] px-2 py-1 text-[10px] font-bold text-[var(--tomato-dark)] opacity-80 transition group-hover:opacity-100">Esperar</span>}
               </span>
             </button>
@@ -42,8 +42,8 @@ export function MealCard({ meal, onEdit, onWaitFor }: MealCardProps) {
       {meal.mine ? (
         <div className="mt-5 flex items-center justify-between rounded-2xl border border-[var(--tomato)]/15 bg-[var(--blush)] px-4 py-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--tomato-dark)]/60">{meal.mine.waitingFor ? "Estou aguardando" : "Meu horário"}</p>
-            <p className={`mt-0.5 font-extrabold text-[var(--tomato-dark)] ${meal.mine.waitingFor ? "" : "font-mono"}`}>{meal.mine.waitingFor?.name ?? meal.mine.time ?? "—"}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--tomato-dark)]/60">{meal.mine.waitingFor ? "Estou aguardando" : meal.mine.availableUntil ? "Minha disponibilidade" : "Meu horário"}</p>
+            <p className={`mt-0.5 font-extrabold text-[var(--tomato-dark)] ${meal.mine.waitingFor ? "" : "font-mono"}`}>{meal.mine.waitingFor?.name ?? formatMealAvailability(meal.mine.time, meal.mine.availableUntil)}</p>
           </div>
           <button type="button" onClick={onEdit} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[var(--tomato-dark)] shadow-sm transition hover:-translate-y-0.5 hover:shadow">
             {meal.mine.waitingFor

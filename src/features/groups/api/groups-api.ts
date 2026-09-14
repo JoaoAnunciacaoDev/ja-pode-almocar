@@ -87,27 +87,41 @@ export function fetchGroupBySlug(groupSlug: string) {
   return fetchGroupBy("slug", groupSlug);
 }
 
-export async function getOrCreateInvite(groupId: string) {
-  const client = requireSupabaseClient();
-  const { data: existing, error: selectError } = await client
-    .from("group_invites")
-    .select("code")
-    .eq("group_id", groupId)
-    .is("revoked_at", null)
-    .limit(1)
-    .maybeSingle();
-  if (selectError) throw selectError;
-  if (existing) return existing.code;
-
-  const { data: userData } = await client.auth.getUser();
-  if (!userData.user) throw new Error("Authentication required");
-  const { data, error } = await client
-    .from("group_invites")
-    .insert({ group_id: groupId, created_by: userData.user.id })
-    .select("code")
-    .single();
+export async function fetchActiveGroupInvite(groupId: string) {
+  const { data, error } = await requireSupabaseClient().rpc("get_active_group_invite", { target_group_id: groupId });
   if (error) throw error;
-  return data.code;
+  return data as string | null;
+}
+
+export async function revokeGroupInvite(groupId: string) {
+  const { error } = await requireSupabaseClient().rpc("revoke_group_invite", { target_group_id: groupId });
+  if (error) throw error;
+}
+
+export async function regenerateGroupInvite(groupId: string) {
+  const { data, error } = await requireSupabaseClient().rpc("regenerate_group_invite", { target_group_id: groupId });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function leaveGroup(groupId: string) {
+  const { error } = await requireSupabaseClient().rpc("leave_group", { target_group_id: groupId });
+  if (error) throw error;
+}
+
+export async function removeGroupMember(groupId: string, userId: string) {
+  const { error } = await requireSupabaseClient().rpc("remove_group_member", { target_group_id: groupId, target_user_id: userId });
+  if (error) throw error;
+}
+
+export async function transferGroupOwnership(groupId: string, newOwnerId: string) {
+  const { error } = await requireSupabaseClient().rpc("transfer_group_ownership", { target_group_id: groupId, new_owner_id: newOwnerId });
+  if (error) throw error;
+}
+
+export async function deleteGroup(groupId: string) {
+  const { error } = await requireSupabaseClient().rpc("delete_group", { target_group_id: groupId });
+  if (error) throw error;
 }
 
 export async function fetchInvitePreview(code: string): Promise<GroupInvitePreview | null> {

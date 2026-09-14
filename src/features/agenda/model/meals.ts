@@ -7,27 +7,39 @@ export type MealOccurrence = {
   id: string;
   name: string;
   time: string | null;
+  availableUntil?: string | null;
   status: MealStatus;
   waitingFor?: Pick<MealOccurrence, "id" | "name">;
 };
 export type DailyMeal = { type: MealType; label: string; emoji: string; people: MealOccurrence[]; mine?: MealOccurrence };
-export type MealRoutine = { weekday: number; mealType: MealType; time: string; startDate: string; endDate: string };
-export type MealEntry = { date: string; mealType: MealType; time: string | null; status: MealStatus };
+export type MealRoutine = { weekday: number; mealType: MealType; time: string; availableUntil?: string | null; startDate: string; endDate: string };
+export type MealEntry = { date: string; mealType: MealType; time: string | null; availableUntil?: string | null; status: MealStatus };
+
+export function formatMealAvailability(time: string | null, availableUntil?: string | null) {
+  if (!time) return "—";
+  return availableUntil ? `${time}–${availableUntil}` : time;
+}
+
+export function parseMealAvailability(value: string) {
+  if (value === "—") return { time: null, availableUntil: null };
+  const [time, availableUntil] = value.split("–");
+  return { time, availableUntil: availableUntil ?? null };
+}
 
 export function resolveMealForDate(
   date: string,
   mealType: MealType,
   routines: MealRoutine[],
   entries: MealEntry[],
-): Pick<MealEntry, "time" | "status"> | null {
+): Pick<MealEntry, "time" | "availableUntil" | "status"> | null {
   const exception = entries.find((entry) => entry.date === date && entry.mealType === mealType);
-  if (exception) return { time: exception.time, status: exception.status };
+  if (exception) return { time: exception.time, status: exception.status, ...(exception.availableUntil ? { availableUntil: exception.availableUntil } : {}) };
 
   const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
   const routine = routines.find(
     (item) => item.mealType === mealType && item.weekday === weekday && item.startDate <= date && item.endDate >= date,
   );
-  return routine ? { time: routine.time, status: "PLANNED" } : null;
+  return routine ? { time: routine.time, status: "PLANNED", ...(routine.availableUntil ? { availableUntil: routine.availableUntil } : {}) } : null;
 }
 
 export function waitForPerson(
@@ -40,6 +52,7 @@ export function waitForPerson(
   const occurrence: MealOccurrence = {
     ...currentUser,
     time: null,
+    availableUntil: null,
     status: "PLANNED",
     waitingFor: target,
   };
