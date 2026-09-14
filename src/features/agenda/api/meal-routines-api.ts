@@ -50,6 +50,7 @@ export async function saveMealRoutine(groupId: string, userId: string, routine: 
     : requireSupabaseClient().from("meal_routines").insert(values);
   const { error } = await query;
   if (error?.code === "23505") throw new Error("Já existe uma rotina para esta refeição, dia e data inicial.");
+  if (error?.code === "23P01") throw new Error("Este período se sobrepõe a outra rotina da mesma refeição e dia.");
   if (error?.message.includes("outside the group meal window")) throw new Error("A disponibilidade está fora do período configurado para esta refeição.");
   if (error) throw error;
 }

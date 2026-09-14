@@ -3,12 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda } from "@/features/agenda/api/weekly-agenda-api";
-import { cycleWeeklyTime, defaultWeeklyAgenda, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
+import { cycleWeeklyTime, emptyWeeklyAgenda, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
 import { defaultMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
+import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 
 const dayNames = ["SEG", "TER", "QUA", "QUI", "SEX"];
 
@@ -18,10 +19,11 @@ export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
   const dates = useMemo(() => getWorkWeekDates(), []);
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
+  useGroupRealtime(group?.id);
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const weekQuery = useQuery({ queryKey: ["weekly-agenda", group?.id, dates[0]], queryFn: () => fetchWeeklyAgenda(group!.id, user!.id, dates), enabled: Boolean(group && user) });
   const [rowsOverride, setRowsOverride] = useState<WeeklyAgendaRow[] | null>(null);
-  const rows = rowsOverride ?? weekQuery.data ?? defaultWeeklyAgenda;
+  const rows = rowsOverride ?? weekQuery.data ?? emptyWeeklyAgenda;
   const windows = windowsQuery.data ?? defaultMealWindows;
   const saveMutation = useMutation({
     mutationFn: () => saveWeeklyAgenda(group!.id, user!.id, dates, rows),

@@ -4,8 +4,8 @@ import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 const mealLabels: Record<MealType, string> = { BREAKFAST: "☕ Desjejum", LUNCH: "🍛 Almoço", DINNER: "🌙 Jantar" };
 
-export function getWorkWeekDates() {
-  const today = new Date();
+export function getWorkWeekDates(referenceDate?: string) {
+  const today = referenceDate ? new Date(`${referenceDate}T12:00:00`) : new Date();
   today.setHours(12, 0, 0, 0);
   const offset = today.getDay() === 0 ? 1 : 1 - today.getDay();
   const monday = new Date(today);

@@ -9,6 +9,7 @@ import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
 import { buildTimeOptions, defaultMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
+import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 import { inputClassName } from "@/shared/components/form-styles";
 
 const weekdays = [
@@ -33,6 +34,7 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
   const queryClient = useQueryClient();
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
+  useGroupRealtime(group?.id);
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const routinesQuery = useQuery({ queryKey: ["meal-routines", group?.id, user?.id], queryFn: () => fetchMealRoutines(group!.id, user!.id), enabled: Boolean(group && user) });
   const [draft, setDraft] = useState<MealRoutineInput>(defaultDraft);

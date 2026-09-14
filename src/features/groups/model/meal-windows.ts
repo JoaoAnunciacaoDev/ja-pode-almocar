@@ -14,19 +14,6 @@ export const defaultMealWindows: MealWindow[] = [
   { mealType: "DINNER", label: "Jantar", openTime: "17:00", closeTime: "20:00", intervalMinutes: 10 },
 ];
 
-export function loadMealWindows(): MealWindow[] {
-  try {
-    const stored = localStorage.getItem("group-meal-windows-demo");
-    return stored ? (JSON.parse(stored) as MealWindow[]) : defaultMealWindows;
-  } catch {
-    return defaultMealWindows;
-  }
-}
-
-export function saveMealWindows(windows: MealWindow[]) {
-  localStorage.setItem("group-meal-windows-demo", JSON.stringify(windows));
-}
-
 export function isTimeWithinWindow(time: string, window: MealWindow) {
   return time >= window.openTime && time <= window.closeTime;
 }

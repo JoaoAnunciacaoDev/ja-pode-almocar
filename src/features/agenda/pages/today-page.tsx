@@ -8,12 +8,13 @@ import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
 import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialog";
 import { type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
-import { cycleWeeklyTime, defaultWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
+import { cycleWeeklyTime, emptyWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
 import { defaultMealWindows, isTimeWithinWindow } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
+import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 
 const defaultTimes: Record<MealType, string> = { BREAKFAST: "08:00", LUNCH: "12:00", DINNER: "18:00" };
 
@@ -30,16 +31,19 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
   const queryClient = useQueryClient();
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
-  const weekDates = useMemo(() => getWorkWeekDates(), []);
-  const date = dateInTimezone(group?.timezone ?? "America/Sao_Paulo");
+  useGroupRealtime(group?.id);
+  const currentDate = dateInTimezone(group?.timezone ?? "America/Sao_Paulo");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const date = selectedDate ?? currentDate;
+  const weekDates = useMemo(() => getWorkWeekDates(date), [date]);
   const agendaQuery = useQuery({ queryKey: ["daily-agenda", group?.id, date], queryFn: () => fetchDailyAgenda(group!.id, date, user!.id), enabled: Boolean(group && user) });
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const weeklyQuery = useQuery({ queryKey: ["weekly-agenda", group?.id, weekDates[0]], queryFn: () => fetchWeeklyAgenda(group!.id, user!.id, weekDates), enabled: Boolean(group && user) });
   const meals = agendaQuery.data ?? [];
   const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00", availableUntil: null });
   const mealWindows = windowsQuery.data ?? defaultMealWindows;
-  const [weeklyRowsOverride, setWeeklyRowsOverride] = useState<typeof defaultWeeklyAgenda | null>(null);
-  const weeklyRows = weeklyRowsOverride ?? weeklyQuery.data ?? defaultWeeklyAgenda;
+  const [weeklyRowsOverride, setWeeklyRowsOverride] = useState<typeof emptyWeeklyAgenda | null>(null);
+  const weeklyRows = weeklyRowsOverride ?? weeklyQuery.data ?? emptyWeeklyAgenda;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [waitTarget, setWaitTarget] = useState<{ mealType: MealType; person: MealOccurrence } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -47,10 +51,18 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
     mutationFn: saveDailyEntry,
     onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["daily-agenda", group?.id, date] }); },
   });
+  const pendingConfirmations = meals.filter((meal) => meal.mine?.status === "PLANNED").length;
 
-  const today = new Intl.DateTimeFormat("pt-BR", {
+  const selectedDateLabel = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long", day: "numeric", month: "long", timeZone: group?.timezone ?? "America/Sao_Paulo",
-  }).format(new Date());
+  }).format(new Date(`${date}T12:00:00Z`));
+
+  function moveDate(days: number) {
+    const next = new Date(`${date}T12:00:00Z`);
+    next.setUTCDate(next.getUTCDate() + days);
+    setSelectedDate(next.toISOString().slice(0, 10));
+    setWeeklyRowsOverride(null);
+  }
 
   function openEditor(mealType: MealType = "LUNCH") {
     const existing = meals.find((meal) => meal.type === mealType)?.mine;
@@ -115,10 +127,10 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
           <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <p className="mb-2 text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">Agenda do grupo</p>
-              <h1 className="font-serif text-4xl font-bold tracking-tight sm:text-5xl">Hoje</h1>
-              <p className="mt-2 capitalize text-black/55">{today}</p>
+              <h1 className="font-serif text-4xl font-bold tracking-tight sm:text-5xl">{date === currentDate ? "Hoje" : "Agenda do dia"}</h1>
+              <p className="mt-2 capitalize text-black/55">{selectedDateLabel}</p>
             </div>
-            <button type="button" onClick={() => openEditor()} className="rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:bg-black">+ Informar horário</button>
+            <div className="flex flex-wrap gap-2"><button type="button" onClick={() => moveDate(-1)} aria-label="Ver dia anterior" className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">←</button>{date !== currentDate && <button type="button" onClick={() => setSelectedDate(null)} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Hoje</button>}<button type="button" onClick={() => moveDate(1)} aria-label="Ver próximo dia" className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">→</button><button type="button" onClick={() => openEditor()} className="rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:bg-black">+ Informar horário</button></div>
           </div>
           {notice && (
             <button type="button" onClick={() => setNotice(null)} className="mb-5 flex w-full items-center justify-between rounded-2xl bg-[var(--sage)] px-4 py-3 text-left text-sm font-semibold text-white">
@@ -158,8 +170,8 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
             <p className="mt-3 text-[11px] text-black/35">Clique em um horário para avançar um intervalo.</p>
           </section>
           <section className="rounded-[28px] bg-[var(--sage)] p-5 text-white shadow-[0_18px_50px_rgba(49,91,72,.18)]">
-            <p className="text-3xl">👋</p><h2 className="mt-3 text-xl font-bold">Faltam 2 confirmações</h2>
-            <p className="mt-2 text-sm leading-6 text-white/70">Avise o grupo se seus horários desta semana continuam valendo.</p>
+            <p className="text-3xl">{pendingConfirmations ? "👋" : "✓"}</p><h2 className="mt-3 text-xl font-bold">{pendingConfirmations ? `${pendingConfirmations} ${pendingConfirmations === 1 ? "confirmação pendente" : "confirmações pendentes"}` : "Tudo confirmado por hoje"}</h2>
+            <p className="mt-2 text-sm leading-6 text-white/70">{pendingConfirmations ? "Confirme se os horários planejados para este dia continuam valendo." : "Não há horários planejados aguardando sua confirmação."}</p>
             <Link to="/g/$groupSlug/agenda" params={{ groupSlug: group.slug }} className="mt-5 block w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-[var(--sage)]">Revisar minha semana</Link>
           </section>
         </aside>

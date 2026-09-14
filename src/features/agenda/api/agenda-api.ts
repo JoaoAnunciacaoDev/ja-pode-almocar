@@ -35,6 +35,7 @@ export async function fetchDailyAgenda(groupId: string, date: string, currentUse
         time: entry ? entry.time?.slice(0, 5) ?? null : routine!.time.slice(0, 5),
         availableUntil: entry ? entry.available_until?.slice(0, 5) ?? null : routine!.available_until?.slice(0, 5) ?? null,
         status,
+        source: entry ? "DAILY" as const : "ROUTINE" as const,
         ...(waitingFor ? { waitingFor: { id: waitingFor.id, name: waitingFor.name } } : {}),
       };
       return [occurrence];

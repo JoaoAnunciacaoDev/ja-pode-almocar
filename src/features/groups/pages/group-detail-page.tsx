@@ -7,12 +7,14 @@ import { fetchActiveGroupInvite, fetchGroupBySlug } from "@/features/groups/api/
 import { GroupInvitePanel } from "@/features/groups/components/group-invite-panel";
 import { GroupMembersPanel } from "@/features/groups/components/group-members-panel";
 import { AppShell } from "@/shared/components/app-shell";
+import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 
 export function GroupDetailPage({ groupSlug }: { groupSlug: string }) {
   const { user } = useAuth();
   const [feedback, setFeedback] = useState<string | null>(null);
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
+  useGroupRealtime(group?.id);
   const isOwner = group?.ownerId === user?.id;
   const inviteQuery = useQuery({
     queryKey: ["groups", group?.id, "invite"],

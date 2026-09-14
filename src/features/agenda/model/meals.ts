@@ -9,6 +9,7 @@ export type MealOccurrence = {
   time: string | null;
   availableUntil?: string | null;
   status: MealStatus;
+  source?: "ROUTINE" | "DAILY";
   waitingFor?: Pick<MealOccurrence, "id" | "name">;
 };
 export type DailyMeal = { type: MealType; label: string; emoji: string; people: MealOccurrence[]; mine?: MealOccurrence };

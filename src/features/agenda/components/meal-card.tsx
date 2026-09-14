@@ -29,7 +29,7 @@ export function MealCard({ meal, onEdit, onWaitFor }: MealCardProps) {
             >
               <span className="flex items-center gap-3">
                 <span className="grid size-9 place-items-center rounded-full bg-[var(--peach)] text-xs font-extrabold text-[var(--tomato-dark)]">{person.name.slice(0, 2).toUpperCase()}</span>
-                <span><span className="block text-sm font-bold">{person.name}{person.id === meal.mine?.id ? " (você)" : ""}</span><span className="block text-[11px] text-black/40">{person.waitingFor ? `Aguardando ${person.waitingFor.name}` : statusLabel[person.status]}</span></span>
+                <span><span className="block text-sm font-bold">{person.name}{person.id === meal.mine?.id ? " (você)" : ""}</span><span className="block text-[11px] text-black/40">{person.waitingFor ? `Aguardando ${person.waitingFor.name}` : `${statusLabel[person.status]}${person.source === "ROUTINE" ? " · rotina" : person.source === "DAILY" ? " · ajuste do dia" : ""}`}</span></span>
               </span>
               <span className="flex items-center gap-2">
                 <time className="font-mono text-sm font-bold">{formatMealAvailability(person.time, person.availableUntil)}</time>
