@@ -72,13 +72,3 @@ O teste de integração cria proprietário, integrante e usuário externo descar
 ```bash
 SUPABASE_URL=... SUPABASE_PUBLISHABLE_KEY=... SUPABASE_SERVICE_ROLE_KEY=... bun run test:rls
 ```
-
-## Deploy na Vercel
-
-1. Execute `vercel login` e depois `vercel --prod` na raiz do projeto.
-2. Cadastre `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` nos ambientes Preview e Production.
-3. Defina `APP_URL` com o domínio público nas funções que enviam e-mail. Nunca cadastre `SUPABASE_SERVICE_ROLE_KEY` como variável `VITE_*`.
-4. No Supabase Auth, configure o domínio como `Site URL` e adicione `/redefinir-senha` e `/convite/**` à lista de Redirect URLs.
-5. Monitore `https://SEU_DOMINIO/health.json` e os logs/erros do projeto na Vercel.
-
-O `vercel.json` mantém o fallback da SPA e aplica cabeçalhos básicos de segurança.
