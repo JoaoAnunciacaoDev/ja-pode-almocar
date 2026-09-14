@@ -12,10 +12,11 @@ import {
 import { AppShell } from "@/shared/components/app-shell";
 
 const options: Array<{ key: keyof NotificationPreferences; title: string; description: string }> = [
-  { key: "weeklyReviewEnabled", title: "Revisão semanal", description: "Um lembrete aos domingos para conferir os horários da próxima semana." },
-  { key: "dailyLunchSummaryEnabled", title: "Resumo do almoço", description: "Quem pretende almoçar e os horários combinados no dia." },
-  { key: "participationReminderEnabled", title: "Confirmação de participação", description: "Um lembrete para confirmar se o planejamento do dia continua valendo." },
-  { key: "dinnerSummaryEnabled", title: "Resumo do jantar", description: "Quem pretende jantar e os horários combinados no dia." },
+  { key: "weeklyReviewEnabled", title: "Revisão semanal", description: "Domingos, às 18h: confira os horários da próxima semana." },
+  { key: "dailyBreakfastSummaryEnabled", title: "Resumo do desjejum", description: "Todos os dias, às 7h: participantes e horários combinados." },
+  { key: "dailyLunchSummaryEnabled", title: "Resumo do almoço", description: "Todos os dias, às 11h: participantes e horários combinados." },
+  { key: "participationReminderEnabled", title: "Confirmação de participação", description: "Às 9h: confirme planejamentos de almoço que ainda não foram confirmados." },
+  { key: "dinnerSummaryEnabled", title: "Resumo do jantar", description: "Todos os dias, às 17h: participantes e horários combinados." },
 ];
 
 export function NotificationSettingsPage() {
@@ -48,7 +49,7 @@ export function NotificationSettingsPage() {
         <div className="mt-6">
           <p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">Sua conta</p>
           <h1 className="mt-2 font-serif text-4xl font-bold">Notificações</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-black/55">Escolha os e-mails que deseja receber. As preferências já ficam salvas; os envios serão ativados quando o serviço de notificações for lançado.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-black/55">Escolha os e-mails que deseja receber. Os horários seguem o fuso configurado em cada grupo do qual você participa.</p>
         </div>
 
         <div className="mt-8 overflow-hidden rounded-[28px] border border-black/8 bg-white shadow-[0_18px_60px_rgba(42,35,28,.07)]">

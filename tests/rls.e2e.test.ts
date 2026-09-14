@@ -60,6 +60,11 @@ describe.skipIf(!enabled)("Supabase RLS with owner, member and outsider", () => 
     const outsiderEntry = await clients.outsider.from("meal_entries").insert({ group_id: groupId, user_id: userIds[2], date: "2030-01-02", meal_type: "LUNCH", time: "12:00", status: "PLANNED" });
     expect(outsiderEntry.error).not.toBeNull();
 
+    const deliveryAudit = await clients.owner.from("notification_deliveries").select("id");
+    expect(deliveryAudit.error).not.toBeNull();
+    const dispatchConfig = await clients.owner.from("notification_dispatch_config").select("cron_token");
+    expect(dispatchConfig.error).not.toBeNull();
+
     const memberUpdate = await clients.member.from("groups").update({ name: "Not allowed" }).eq("id", groupId).select();
     expect(memberUpdate.data).toHaveLength(0);
     const ownerUpdate = await clients.owner.from("groups").update({ name: "Owner updated" }).eq("id", groupId).select("name").single();

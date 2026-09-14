@@ -59,6 +59,25 @@ supabase db push
 
 Nunca exponha a chave secreta/service role no navegador.
 
+## Lembretes por e-mail
+
+Os lembretes são enviados por uma Supabase Edge Function através do Brevo. Configure os segredos no projeto remoto:
+
+```text
+BREVO_API_KEY=...
+EMAIL_FROM=Já pode almoçar? <remetente-verificado@example.com>
+APP_URL=https://seu-dominio.example.com
+```
+
+Depois, publique o banco e a função. A migration agenda a execução a cada cinco minutos e protege a chamada com um token interno:
+
+```bash
+supabase db push
+supabase functions deploy send-notification-reminders
+```
+
+Os horários iniciais, sempre no fuso de cada grupo, são: desjejum às 7h, confirmação às 9h, almoço às 11h, jantar às 17h e revisão semanal aos domingos às 18h. Os resumos de desjejum e jantar começam desativados. Falhas são registradas em `notification_deliveries` e tentadas novamente até cinco vezes.
+
 ## Qualidade
 
 ```bash

@@ -9,7 +9,7 @@
 - **Estilos:** Tailwind CSS 4, mantendo tokens visuais em CSS.
 - **Dados e identidade:** Supabase (PostgreSQL, Auth e Row Level Security).
 - **Agendamentos:** Supabase Cron invocando Edge Functions.
-- **E-mail:** Resend, atrás de uma função própria para permitir troca futura.
+- **E-mail:** Brevo, isolado em uma Edge Function.
 - **Hospedagem:** Vercel para a aplicação SPA; Supabase para banco, funções e tarefas.
 - **Testes iniciais:** `bun test` para regras de domínio; lint e build no CI.
 
@@ -26,6 +26,7 @@ src/app/routes       instância do router e árvore gerada
 src/features         UI e regras agrupadas por domínio
 src/shared           componentes, hooks e utilitários reutilizáveis
 supabase/migrations  schema, funções e políticas RLS
+supabase/functions   envio transacional e integrações de backend
 ```
 
 ## Regras arquiteturais
@@ -35,3 +36,4 @@ supabase/migrations  schema, funções e políticas RLS
 3. Usuários podem escrever somente seus próprios horários.
 4. Horários são `time`; datas acadêmicas são `date`. Instantes de auditoria são `timestamptz`.
 5. O fuso padrão inicial é `America/Sao_Paulo`, armazenado por grupo para evolução futura.
+6. O Cron chama a Edge Function a cada cinco minutos; a tabela de entregas garante idempotência e até cinco tentativas.
