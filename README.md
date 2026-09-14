@@ -43,6 +43,7 @@ O arquivo `src/app/routes/routeTree.gen.ts` é gerado automaticamente pelo plugi
 - `/g/:groupSlug/rotinas`: horários recorrentes do usuário.
 - `/g/:groupSlug/configuracoes`: horários de funcionamento do grupo.
 - `/configuracoes/notificacoes`: preferências pessoais de notificação.
+- `/configuracoes/perfil`: nome, e-mail, senha e exclusão da conta.
 - `/convite/:code`: aceite de convite.
 
 Links antigos com o UUID do grupo são redirecionados para o endereço legível correspondente.
@@ -66,8 +67,18 @@ bun run lint
 bun run build
 ```
 
-## Próximos incrementos
+O teste de integração cria proprietário, integrante e usuário externo descartáveis e valida as políticas RLS. Ele exige variáveis exclusivas de servidor e nunca expõe a service role ao Vite:
 
-- tarefas de e-mail semanais e diárias.
-- testes E2E dos fluxos de autenticação, convite e agenda.
-- tratamento centralizado e tradução de erros do Supabase.
+```bash
+SUPABASE_URL=... SUPABASE_PUBLISHABLE_KEY=... SUPABASE_SERVICE_ROLE_KEY=... bun run test:rls
+```
+
+## Deploy na Vercel
+
+1. Execute `vercel login` e depois `vercel --prod` na raiz do projeto.
+2. Cadastre `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` nos ambientes Preview e Production.
+3. Defina `APP_URL` com o domínio público nas funções que enviam e-mail. Nunca cadastre `SUPABASE_SERVICE_ROLE_KEY` como variável `VITE_*`.
+4. No Supabase Auth, configure o domínio como `Site URL` e adicione `/redefinir-senha` e `/convite/**` à lista de Redirect URLs.
+5. Monitore `https://SEU_DOMINIO/health.json` e os logs/erros do projeto na Vercel.
+
+O `vercel.json` mantém o fallback da SPA e aplica cabeçalhos básicos de segurança.
