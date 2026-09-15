@@ -7,7 +7,7 @@ import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda as saveWeeklyAgen
 import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
 import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialog";
-import { type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
+import { formatMealAvailability, type DailyMeal, type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
 import { cycleWeeklyTime, emptyWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
@@ -51,7 +51,7 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
     mutationFn: saveDailyEntry,
     onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["daily-agenda", group?.id, date] }); },
   });
-  const pendingConfirmations = meals.filter((meal) => meal.mine?.status === "PLANNED").length;
+  const pendingMeals = meals.filter((meal) => meal.mine?.status === "PLANNED");
 
   const selectedDateLabel = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long", day: "numeric", month: "long", timeZone: group?.timezone ?? "America/Sao_Paulo",
@@ -104,6 +104,22 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
     await entryMutation.mutateAsync({ groupId: group.id, date, mealType: draft.mealType, status: draft.status, time: draft.status === "NOT_GOING" ? null : draft.time, availableUntil: draft.status === "NOT_GOING" ? null : draft.availableUntil });
     setIsDialogOpen(false);
     setNotice("Seu horário foi atualizado.");
+  }
+
+  async function confirmPlannedMeal(meal: DailyMeal) {
+    if (!group || !meal.mine?.time) {
+      openEditor(meal.type);
+      return;
+    }
+    await entryMutation.mutateAsync({
+      groupId: group.id,
+      date,
+      mealType: meal.type,
+      status: "CONFIRMED",
+      time: meal.mine.time,
+      availableUntil: meal.mine.availableUntil ?? null,
+    });
+    setNotice(`${meal.label} confirmado para ${formatMealAvailability(meal.mine.time, meal.mine.availableUntil)}.`);
   }
 
   async function confirmWaiting() {
@@ -176,8 +192,23 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
             <p className="mt-3 text-[11px] text-black/35">Clique em um dia para abrir sua agenda. Clique em um horário para avançar um intervalo.</p>
           </section>
           <section className="rounded-[28px] bg-[var(--sage)] p-5 text-white shadow-[0_18px_50px_rgba(49,91,72,.18)]">
-            <p className="text-3xl">{pendingConfirmations ? "👋" : "✓"}</p><h2 className="mt-3 text-xl font-bold">{pendingConfirmations ? `${pendingConfirmations} ${pendingConfirmations === 1 ? "confirmação pendente" : "confirmações pendentes"}` : "Tudo confirmado por hoje"}</h2>
-            <p className="mt-2 text-sm leading-6 text-white/70">{pendingConfirmations ? "Confirme se os horários planejados para este dia continuam valendo." : "Não há horários planejados aguardando sua confirmação."}</p>
+            <p className="text-3xl">{pendingMeals.length ? "👋" : "✓"}</p><h2 className="mt-3 text-xl font-bold">{pendingMeals.length ? `${pendingMeals.length} ${pendingMeals.length === 1 ? "horário para confirmar" : "horários para confirmar"}` : date === currentDate ? "Tudo confirmado por hoje" : "Tudo confirmado neste dia"}</h2>
+            {pendingMeals.length ? (
+              <div className="mt-4 space-y-2">
+                {pendingMeals.map((meal) => (
+                  <div key={meal.type} className="rounded-2xl bg-white/10 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-bold">{meal.emoji} {meal.label}</p>
+                        <p className="mt-0.5 font-mono text-sm text-white/80">{formatMealAvailability(meal.mine!.time, meal.mine!.availableUntil)}</p>
+                        <p className="mt-1 text-xs text-white/60">{meal.mine!.waitingFor ? `Aguardando ${meal.mine!.waitingFor.name}` : meal.mine!.source === "ROUTINE" ? "Planejado pela sua rotina semanal" : "Planejamento deste dia"}</p>
+                      </div>
+                      <button type="button" onClick={() => confirmPlannedMeal(meal)} disabled={entryMutation.isPending} className="shrink-0 rounded-xl bg-white px-3 py-2 text-xs font-bold text-[var(--sage)] disabled:opacity-50">{meal.mine!.time ? "Confirmar" : "Revisar"}</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="mt-2 text-sm leading-6 text-white/70">Não há horários planejados aguardando sua confirmação.</p>}
             <Link to="/g/$groupSlug/agenda" params={{ groupSlug: group.slug }} className="mt-5 block w-full rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-[var(--sage)]">Revisar minha semana</Link>
           </section>
         </aside>
