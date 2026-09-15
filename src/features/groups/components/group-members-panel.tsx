@@ -46,15 +46,15 @@ export function GroupMembersPanel({ group, currentUserId, onFeedback }: { group:
   const error = removeMutation.error || transferMutation.error || leaveMutation.error || deleteMutation.error;
   const pending = removeMutation.isPending || transferMutation.isPending || leaveMutation.isPending || deleteMutation.isPending;
 
-  return <div className="space-y-6">
-    <section className="rounded-[28px] border border-black/8 bg-white p-6 shadow-[0_18px_60px_rgba(42,35,28,.07)]">
+  return <div className="min-w-0 space-y-6">
+    <section className="min-w-0 rounded-[28px] border border-black/8 bg-white p-5 shadow-[0_18px_60px_rgba(42,35,28,.07)] sm:p-6">
       <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-black/40">Participantes</p><h2 className="mt-1 text-xl font-bold">{group.members.length} {group.members.length === 1 ? "integrante" : "integrantes"}</h2></div>
       <ul className="mt-5 divide-y divide-black/7">
         {group.members.map((member) => <li key={member.id} className="flex items-center justify-between gap-3 py-4"><div className="flex min-w-0 items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--peach)] text-xs font-extrabold text-[var(--tomato-dark)]">{initials(member.name)}</span><div className="min-w-0"><p className="truncate text-sm font-bold">{member.name}</p><p className="text-xs text-black/40">{member.role === "OWNER" ? "Proprietário" : "Integrante"}</p></div></div>{member.role === "OWNER" ? <span title="Proprietário">👑</span> : isOwner && <button disabled={pending} type="button" onClick={() => setConfirmation({ title: `Remover ${member.name}?`, description: "Os horários e rotinas dessa pessoa neste grupo também serão apagados.", confirmLabel: "Remover integrante", action: () => removeMutation.mutate(member.id) })} className="shrink-0 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Remover</button>}</li>)}
       </ul>
     </section>
 
-    <section className="rounded-[28px] border border-red-200 bg-white p-6">
+    <section className="min-w-0 rounded-[28px] border border-red-200 bg-white p-5 sm:p-6">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-red-600">Gestão do grupo</p>
       {isOwner ? <>
         <div className="mt-4"><h2 className="font-extrabold">Transferir propriedade</h2><p className="mt-1 text-sm leading-5 text-black/45">A pessoa escolhida passa a controlar integrantes, convites e configurações. Você permanece como integrante.</p>{members.length ? <div className="mt-3 flex flex-col gap-2 sm:flex-row"><select value={selectedNewOwnerId} onChange={(event) => setNewOwnerId(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm">{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select><button disabled={pending || !selectedNewOwnerId} type="button" onClick={() => { const member = members.find((item) => item.id === selectedNewOwnerId); if (member) setConfirmation({ title: `Transferir para ${member.name}?`, description: "Essa pessoa passará a controlar integrantes, convites e configurações. Você permanecerá no grupo como integrante.", confirmLabel: "Transferir propriedade", action: () => transferMutation.mutate() }); }} className="rounded-xl border border-black/10 px-4 py-2.5 text-sm font-bold disabled:opacity-40">Transferir</button></div> : <p className="mt-3 text-sm text-black/40">Convide outro integrante antes de transferir.</p>}</div>

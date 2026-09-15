@@ -12,11 +12,11 @@ import {
 import { AppShell } from "@/shared/components/app-shell";
 
 const options: Array<{ key: keyof NotificationPreferences; title: string; description: string }> = [
-  { key: "weeklyReviewEnabled", title: "Revisão semanal", description: "Domingos, às 18h: confira os horários da próxima semana." },
-  { key: "dailyBreakfastSummaryEnabled", title: "Resumo do desjejum", description: "Todos os dias, às 7h: participantes e horários combinados." },
-  { key: "dailyLunchSummaryEnabled", title: "Resumo do almoço", description: "Todos os dias, às 11h: participantes e horários combinados." },
-  { key: "participationReminderEnabled", title: "Confirmação de participação", description: "Às 9h: confirme planejamentos de almoço que ainda não foram confirmados." },
-  { key: "dinnerSummaryEnabled", title: "Resumo do jantar", description: "Todos os dias, às 17h: participantes e horários combinados." },
+  { key: "weeklyReviewEnabled", title: "Revisão semanal", description: "Domingos, às 17h30: confira os horários da próxima semana." },
+  { key: "dailyBreakfastSummaryEnabled", title: "Resumo do desjejum", description: "Todos os dias, às 6h30: participantes e horários combinados." },
+  { key: "dailyLunchSummaryEnabled", title: "Resumo do almoço", description: "Todos os dias, às 10h30: participantes e horários combinados." },
+  { key: "participationReminderEnabled", title: "Confirmação de participação", description: "Às 8h30: confirme planejamentos de almoço que ainda não foram confirmados." },
+  { key: "dinnerSummaryEnabled", title: "Resumo do jantar", description: "Todos os dias, às 16h30: participantes e horários combinados." },
 ];
 
 export function NotificationSettingsPage() {

@@ -29,16 +29,16 @@ export function GroupDetailPage({ groupSlug }: { groupSlug: string }) {
 
   return (
     <AppShell groupSlug={group.slug}>
-      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:py-12">
+      <div className="mx-auto min-w-0 max-w-6xl px-5 py-8 sm:px-8 lg:py-12">
         <Link to="/grupos" className="text-sm font-bold text-[var(--tomato)]">← Meus grupos</Link>
         <div className="mt-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-          <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">Grupo</p><h1 className="mt-2 font-serif text-4xl font-bold">{group.name}</h1><p className="mt-2 text-black/45">{group.institution || "Instituição não informada"}</p></div>
+          <div className="min-w-0"><p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">Grupo</p><h1 className="mt-2 break-words font-serif text-4xl font-bold">{group.name}</h1><p className="mt-2 break-words text-black/45">{group.institution || "Instituição não informada"}</p></div>
           <div className="flex flex-wrap gap-3"><Link to="/g/$groupSlug/rotinas" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Minhas rotinas</Link>{isOwner && <Link to="/g/$groupSlug/configuracoes" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Configurar</Link>}<Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="rounded-2xl bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white">Ver agenda</Link></div>
         </div>
 
         {feedback && <button type="button" onClick={() => setFeedback(null)} className="mt-6 flex w-full items-center justify-between rounded-2xl bg-[var(--sage)] px-4 py-3 text-left text-sm font-semibold text-white"><span>✓ {feedback}</span><span>×</span></button>}
 
-        <div className={`mt-8 grid gap-6 ${isOwner ? "lg:grid-cols-[1fr_380px]" : ""}`}>
+        <div className={`mt-8 grid min-w-0 gap-6 ${isOwner ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]" : ""}`}>
           <GroupMembersPanel group={group} currentUserId={user!.id} onFeedback={setFeedback} />
           {isOwner && <GroupInvitePanel groupId={group.id} groupName={group.name} inviteCode={inviteQuery.data} loading={inviteQuery.isLoading} error={inviteQuery.error} onFeedback={setFeedback} />}
         </div>

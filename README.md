@@ -76,7 +76,7 @@ supabase db push
 supabase functions deploy send-notification-reminders
 ```
 
-Os horários iniciais, sempre no fuso de cada grupo, são: desjejum às 7h, confirmação às 9h, almoço às 11h, jantar às 17h e revisão semanal aos domingos às 18h. Os resumos de desjejum e jantar começam desativados. Falhas são registradas em `notification_deliveries` e tentadas novamente até cinco vezes.
+Os horários iniciais, sempre no fuso de cada grupo, são: desjejum às 6h30, confirmação às 8h30, almoço às 10h30, jantar às 16h30 e revisão semanal aos domingos às 17h30. Os resumos de desjejum e jantar começam desativados. Falhas são registradas em `notification_deliveries` e tentadas novamente até cinco vezes.
 
 ## Qualidade
 

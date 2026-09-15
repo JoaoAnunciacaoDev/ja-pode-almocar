@@ -1,2 +1,2 @@
-export const inputClassName = "mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3.5 outline-none transition focus:border-[var(--tomato)] focus:ring-4 focus:ring-[var(--tomato)]/10";
+export const inputClassName = "mt-2 min-w-0 max-w-full w-full rounded-2xl border border-black/10 bg-white px-4 py-3.5 outline-none transition focus:border-[var(--tomato)] focus:ring-4 focus:ring-[var(--tomato)]/10";
 export const primaryButtonClassName = "w-full rounded-2xl bg-[var(--ink)] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-black/10 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40";
