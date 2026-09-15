@@ -20,13 +20,14 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
   return (
     <main className="flex min-h-screen flex-col bg-[var(--sand)] text-[var(--ink)]">
       <header className="border-b border-black/8 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between px-5 py-4 sm:px-8">
           <Link to={groupSlug ? "/g/$groupSlug/hoje" : "/grupos"} params={groupSlug ? { groupSlug } : {}} className="flex items-center gap-3 font-bold tracking-tight">
             <span className="grid size-10 place-items-center rounded-2xl bg-[var(--tomato)] text-xl shadow-[0_8px_24px_rgba(220,80,52,.22)]">🍽️</span>
-            <span>Já pode almoçar?</span>
+            <span className="hidden sm:inline">Já pode almoçar?</span>
           </Link>
           <div className="flex items-center gap-3">
-            {groupSlug && <GroupSwitcher groupSlug={groupSlug} />}
+            {groupSlug && <div className="hidden md:block"><GroupSwitcher groupSlug={groupSlug} /></div>}
+            <Link to="/grupos" className="rounded-full px-3 py-2 text-sm font-bold text-black/55 hover:bg-black/5 md:hidden">Grupos</Link>
             <Link to="/grupos" className="hidden rounded-full px-3 py-2 text-sm font-bold text-black/55 hover:bg-black/5 md:block">Meus grupos</Link>
             {groupSlug && <Link to="/g/$groupSlug/configuracoes" params={{ groupSlug }} aria-label="Configurar grupo" className="grid size-9 place-items-center rounded-full text-sm font-bold text-[var(--tomato)] hover:bg-[var(--blush)] lg:flex lg:w-auto lg:px-3">
               <span className="lg:hidden">⚙️</span><span className="hidden lg:inline">Configurar grupo</span>
@@ -44,6 +45,7 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
               </div>
             </details>
           </div>
+          {groupSlug && <div className="w-full has-[select]:mt-3 md:hidden"><GroupSwitcher groupSlug={groupSlug} /></div>}
         </div>
       </header>
       <div className="flex-1">{children}</div>

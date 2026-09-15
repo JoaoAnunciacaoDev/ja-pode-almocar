@@ -41,3 +41,4 @@ yarn-error.log*
 
 # generated/type files
 *.tsbuildinfo
+HANDOFF.md
