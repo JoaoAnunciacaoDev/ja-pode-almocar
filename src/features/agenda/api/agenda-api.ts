@@ -2,10 +2,10 @@ import { fetchGroup } from "@/features/groups/api/groups-api";
 import type { DailyMeal, MealStatus, MealType } from "@/features/agenda/model/meals";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
-const mealMeta: Record<MealType, { label: string; emoji: string }> = {
-  BREAKFAST: { label: "Desjejum", emoji: "☕" },
-  LUNCH: { label: "Almoço", emoji: "🍛" },
-  DINNER: { label: "Jantar", emoji: "🌙" },
+const mealMeta: Record<MealType, { label: string }> = {
+  BREAKFAST: { label: "Desjejum" },
+  LUNCH: { label: "Almoço" },
+  DINNER: { label: "Jantar" },
 };
 
 export async function fetchDailyAgenda(groupId: string, date: string, currentUserId: string): Promise<DailyMeal[]> {

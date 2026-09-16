@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MailPlus } from "lucide-react";
 import { useState } from "react";
 
 import { regenerateGroupInvite, revokeGroupInvite } from "@/features/groups/api/groups-api";
@@ -52,7 +53,7 @@ export function GroupInvitePanel({ groupId, groupName, inviteCode, loading, erro
 
   return (
     <><aside className="min-w-0 max-w-full rounded-[28px] bg-[var(--sage)] p-5 text-white shadow-[0_18px_50px_rgba(49,91,72,.18)] sm:p-6">
-      <p className="text-3xl">✉️</p><h2 className="mt-4 text-2xl font-bold">Convidar pessoas</h2><p className="mt-2 text-sm leading-6 text-white/65">Compartilhe o link com quem deve entrar no grupo. Apenas um convite fica ativo por vez.</p>
+      <MailPlus aria-hidden="true" className="size-8" /><h2 className="mt-4 text-2xl font-bold">Convidar pessoas</h2><p className="mt-2 text-sm leading-6 text-white/65">Compartilhe o link com quem deve entrar no grupo. Apenas um convite fica ativo por vez.</p>
       <div className="mt-5 min-w-0 max-w-full rounded-2xl bg-white/10 p-3"><p className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs text-white/75">{loading ? "Carregando convite…" : inviteUrl || "Nenhum convite ativo"}</p></div>
       {(error || mutationError) && <p className="mt-3 text-xs text-red-100">{error?.message || mutationError?.message}</p>}
       {inviteUrl ? <>

@@ -12,7 +12,7 @@ export type MealOccurrence = {
   source?: "ROUTINE" | "DAILY";
   waitingFor?: Pick<MealOccurrence, "id" | "name">;
 };
-export type DailyMeal = { type: MealType; label: string; emoji: string; people: MealOccurrence[]; mine?: MealOccurrence };
+export type DailyMeal = { type: MealType; label: string; people: MealOccurrence[]; mine?: MealOccurrence };
 export type MealRoutine = { weekday: number; mealType: MealType; time: string; availableUntil?: string | null; startDate: string; endDate: string };
 export type MealEntry = { date: string; mealType: MealType; time: string | null; availableUntil?: string | null; status: MealStatus };
 

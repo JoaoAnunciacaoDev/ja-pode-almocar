@@ -4,9 +4,9 @@ import { buildTimeOptions, type MealWindow } from "@/features/groups/model/meal-
 export type WeeklyAgendaRow = { mealType: MealType; meal: string; values: string[] };
 
 export const emptyWeeklyAgenda: WeeklyAgendaRow[] = [
-  { mealType: "BREAKFAST", meal: "☕ Desjejum", values: ["—", "—", "—", "—", "—"] },
-  { mealType: "LUNCH", meal: "🍛 Almoço", values: ["—", "—", "—", "—", "—"] },
-  { mealType: "DINNER", meal: "🌙 Jantar", values: ["—", "—", "—", "—", "—"] },
+  { mealType: "BREAKFAST", meal: "Desjejum", values: ["—", "—", "—", "—", "—"] },
+  { mealType: "LUNCH", meal: "Almoço", values: ["—", "—", "—", "—", "—"] },
+  { mealType: "DINNER", meal: "Jantar", values: ["—", "—", "—", "—", "—"] },
 ];
 
 export function cycleWeeklyTime(

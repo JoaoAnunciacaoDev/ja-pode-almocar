@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Check, Search } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -24,7 +25,7 @@ export function GroupDetailPage({ groupSlug }: { groupSlug: string }) {
 
   if (groupQuery.isLoading) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center text-sm text-black/45">Carregando grupo…</div></AppShell>;
   if (!group || groupQuery.error) {
-    return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><p className="text-4xl">🔍</p><h1 className="mt-5 font-serif text-3xl font-bold">Grupo não encontrado</h1><p className="mt-3 text-sm text-black/45">{groupQuery.error?.message}</p><Link to="/grupos" className="mt-6 inline-block font-bold text-[var(--tomato)]">Voltar para meus grupos</Link></div></AppShell>;
+    return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><Search aria-hidden="true" className="mx-auto size-10 text-[var(--tomato)]" /><h1 className="mt-5 font-serif text-3xl font-bold">Grupo não encontrado</h1><p className="mt-3 text-sm text-black/45">{groupQuery.error?.message}</p><Link to="/grupos" className="mt-6 inline-block font-bold text-[var(--tomato)]">Voltar para meus grupos</Link></div></AppShell>;
   }
 
   return (
@@ -36,7 +37,7 @@ export function GroupDetailPage({ groupSlug }: { groupSlug: string }) {
           <div className="flex flex-wrap gap-3"><Link to="/g/$groupSlug/rotinas" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Minhas rotinas</Link>{isOwner && <Link to="/g/$groupSlug/configuracoes" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold">Configurar</Link>}<Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="rounded-2xl bg-[var(--ink)] px-4 py-3 text-sm font-bold text-white">Ver agenda</Link></div>
         </div>
 
-        {feedback && <button type="button" onClick={() => setFeedback(null)} className="mt-6 flex w-full items-center justify-between rounded-2xl bg-[var(--sage)] px-4 py-3 text-left text-sm font-semibold text-white"><span>✓ {feedback}</span><span>×</span></button>}
+        {feedback && <button type="button" onClick={() => setFeedback(null)} className="mt-6 flex w-full items-center justify-between rounded-2xl bg-[var(--sage)] px-4 py-3 text-left text-sm font-semibold text-white"><span className="flex items-center gap-2"><Check aria-hidden="true" className="size-4" />{feedback}</span><span>×</span></button>}
 
         <div className={`mt-8 grid min-w-0 gap-6 ${isOwner ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]" : ""}`}>
           <GroupMembersPanel group={group} currentUserId={user!.id} onFeedback={setFeedback} />

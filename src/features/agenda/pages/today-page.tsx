@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Check, Hand, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { fetchDailyAgenda, saveDailyEntry } from "@/features/agenda/api/agenda-api";
 import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda as saveWeeklyAgendaRemote } from "@/features/agenda/api/weekly-agenda-api";
 import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
+import { MealIcon } from "@/features/agenda/components/meal-icon";
 import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialog";
 import { formatMealAvailability, type DailyMeal, type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
 import { cycleWeeklyTime, emptyWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
@@ -139,7 +141,7 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
   }
 
   if (groupQuery.isLoading || agendaQuery.isLoading) return <AppShell groupSlug={groupSlug}><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando agenda…</div></AppShell>;
-  if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><p className="text-4xl">🔍</p><h1 className="mt-5 font-serif text-3xl font-bold">Grupo não encontrado</h1><p className="mt-3 text-sm text-black/45">Você pode não fazer mais parte deste grupo.</p><Link to="/grupos" className="mt-6 inline-block rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Ver meus grupos</Link></div></AppShell>;
+  if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><Search aria-hidden="true" className="mx-auto size-10 text-[var(--tomato)]" /><h1 className="mt-5 font-serif text-3xl font-bold">Grupo não encontrado</h1><p className="mt-3 text-sm text-black/45">Você pode não fazer mais parte deste grupo.</p><Link to="/grupos" className="mt-6 inline-block rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Ver meus grupos</Link></div></AppShell>;
 
   return (
     <AppShell groupSlug={group.slug}>
@@ -155,7 +157,7 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
           </div>
           {notice && (
             <button type="button" onClick={() => setNotice(null)} className="mb-5 flex w-full items-center justify-between rounded-2xl bg-[var(--sage)] px-4 py-3 text-left text-sm font-semibold text-white">
-              <span>✓ {notice}</span><span aria-hidden="true">×</span>
+              <span className="flex items-center gap-2"><Check aria-hidden="true" className="size-4" />{notice}</span><span aria-hidden="true">×</span>
             </button>
           )}
           <div className="grid gap-5 md:grid-cols-2">
@@ -188,18 +190,18 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
                 </div>
               ))}
             </div>
-            <div className="mt-5 flex flex-wrap items-center gap-5 border-t border-black/7 pt-4 text-xs text-black/45"><span>☕ desjejum</span><span>🍛 almoço</span><span>🌙 jantar</span></div>
+            <div className="mt-5 flex flex-wrap items-center gap-5 border-t border-black/7 pt-4 text-xs text-black/45"><span className="flex items-center gap-1.5"><MealIcon mealType="BREAKFAST" className="size-3.5" />desjejum</span><span className="flex items-center gap-1.5"><MealIcon mealType="LUNCH" className="size-3.5" />almoço</span><span className="flex items-center gap-1.5"><MealIcon mealType="DINNER" className="size-3.5" />jantar</span></div>
             <p className="mt-3 text-[11px] text-black/35">Clique em um dia para abrir sua agenda. Clique em um horário para avançar um intervalo.</p>
           </section>
           <section className="rounded-[28px] bg-[var(--sage)] p-5 text-white shadow-[0_18px_50px_rgba(49,91,72,.18)]">
-            <p className="text-3xl">{pendingMeals.length ? "👋" : "✓"}</p><h2 className="mt-3 text-xl font-bold">{pendingMeals.length ? `${pendingMeals.length} ${pendingMeals.length === 1 ? "horário para confirmar" : "horários para confirmar"}` : date === currentDate ? "Tudo confirmado por hoje" : "Tudo confirmado neste dia"}</h2>
+            {pendingMeals.length ? <Hand aria-hidden="true" className="size-8" /> : <Check aria-hidden="true" className="size-8" />}<h2 className="mt-3 text-xl font-bold">{pendingMeals.length ? `${pendingMeals.length} ${pendingMeals.length === 1 ? "horário para confirmar" : "horários para confirmar"}` : date === currentDate ? "Tudo confirmado por hoje" : "Tudo confirmado neste dia"}</h2>
             {pendingMeals.length ? (
               <div className="mt-4 space-y-2">
                 {pendingMeals.map((meal) => (
                   <div key={meal.type} className="rounded-2xl bg-white/10 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-bold">{meal.emoji} {meal.label}</p>
+                        <p className="flex items-center gap-2 font-bold"><MealIcon mealType={meal.type} className="size-4" />{meal.label}</p>
                         <p className="mt-0.5 font-mono text-sm text-white/80">{formatMealAvailability(meal.mine!.time, meal.mine!.availableUntil)}</p>
                         <p className="mt-1 text-xs text-white/60">{meal.mine!.waitingFor ? `Aguardando ${meal.mine!.waitingFor.name}` : meal.mine!.source === "ROUTINE" ? "Planejado pela sua rotina semanal" : "Planejamento deste dia"}</p>
                       </div>

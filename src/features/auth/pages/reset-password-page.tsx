@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Check } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { AuthShell } from "@/features/auth/components/auth-shell";
@@ -28,7 +29,7 @@ export function ResetPasswordPage() {
 
   return (
     <AuthShell eyebrow="Nova senha" title="Redefinir senha" description="Escolha uma nova senha para sua conta.">
-      {done ? <div className="rounded-2xl bg-[var(--sage)] p-5 text-white"><p className="font-bold">✓ Senha atualizada</p><Link to="/entrar" search={{ invite: undefined }} className="mt-4 inline-block text-sm font-bold underline">Entrar novamente</Link></div> : <form onSubmit={handleSubmit} className="space-y-5"><label className="block text-sm font-bold">Nova senha<input className={inputClassName} name="password" type="password" minLength={6} required /></label><label className="block text-sm font-bold">Confirmar senha<input className={inputClassName} name="confirmation" type="password" minLength={6} required /></label>{errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}<button className={primaryButtonClassName}>Salvar nova senha</button></form>}
+      {done ? <div className="rounded-2xl bg-[var(--sage)] p-5 text-white"><p className="flex items-center gap-2 font-bold"><Check aria-hidden="true" className="size-4" />Senha atualizada</p><Link to="/entrar" search={{ invite: undefined }} className="mt-4 inline-block text-sm font-bold underline">Entrar novamente</Link></div> : <form onSubmit={handleSubmit} className="space-y-5"><label className="block text-sm font-bold">Nova senha<input className={inputClassName} name="password" type="password" minLength={6} required /></label><label className="block text-sm font-bold">Confirmar senha<input className={inputClassName} name="confirmation" type="password" minLength={6} required /></label>{errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}<button className={primaryButtonClassName}>Salvar nova senha</button></form>}
     </AuthShell>
   );
 }

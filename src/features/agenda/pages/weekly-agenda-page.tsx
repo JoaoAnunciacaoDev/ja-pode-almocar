@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Check } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda } from "@/features/agenda/api/weekly-agenda-api";
+import { MealIcon } from "@/features/agenda/components/meal-icon";
 import { clearWeeklyTime, cycleWeeklyTime, emptyWeeklyAgenda, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
@@ -56,7 +58,7 @@ export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
           <div><p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">{group.name}</p><h1 className="mt-2 font-serif text-4xl font-bold">Minha semana</h1></div>
           <div className="flex flex-wrap gap-2"><Link to="/g/$groupSlug/rotinas" params={{ groupSlug: group.slug }} className="rounded-2xl border border-black/10 bg-white px-5 py-3 text-sm font-bold">Editar rotinas</Link><button disabled={saveMutation.isPending} type="button" onClick={() => saveMutation.mutate()} className="rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{saveMutation.isPending ? "Salvando…" : "Salvar alterações"}</button></div>
         </div>
-        {saveMutation.isSuccess && <p role="status" className="mt-5 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">✓ Alterações salvas no grupo.</p>}
+        {saveMutation.isSuccess && <p role="status" className="mt-5 flex items-center gap-2 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white"><Check aria-hidden="true" className="size-4" />Alterações salvas no grupo.</p>}
         {(weekQuery.error || saveMutation.error) && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{weekQuery.error?.message || saveMutation.error?.message}</p>}
         <p className="mt-5 text-sm text-black/50">Clique em um horário para avançar pelas opções ou use “×” para removê-lo. Os horários respeitam os limites definidos pelo proprietário; “—” indica que você não irá.</p>
         <div className="mt-8 overflow-x-auto rounded-[28px] border border-black/8 bg-white p-5 shadow-[0_18px_60px_rgba(42,35,28,.07)]">
@@ -64,7 +66,7 @@ export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
             <div />
             {dates.map((date, index) => <div key={date} className="rounded-xl bg-[var(--cream)] px-3 py-3 text-center text-xs font-extrabold">{dayNames[index]} {date.slice(-2)}</div>)}
             {rows.flatMap((row, rowIndex) => [
-              <div key={`${row.meal}-label`} className="flex items-center font-bold">{row.meal}</div>,
+              <div key={`${row.meal}-label`} className="flex items-center gap-2 font-bold"><MealIcon mealType={row.mealType} className="size-4 text-[var(--tomato)]" />{row.meal}</div>,
               ...row.values.map((value, index) => (
                 <div key={`${row.meal}-${index}`} className="relative">
                   <button type="button" onClick={() => cycleTime(rowIndex, index)} aria-label={`${row.meal}, alterar horário de ${value}`} className="h-full min-h-14 w-full rounded-xl border border-black/8 px-3 py-4 pr-9 font-mono text-sm font-bold hover:border-[var(--tomato)] hover:bg-[var(--blush)]">{value}</button>

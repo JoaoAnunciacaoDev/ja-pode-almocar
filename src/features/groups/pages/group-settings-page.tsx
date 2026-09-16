@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Check } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -54,7 +55,7 @@ export function GroupSettingsPage({ groupSlug }: { groupSlug: string }) {
           <div className="min-w-0"><h2 className="text-xl font-extrabold">Dados do grupo</h2><p className="mt-1 text-sm text-black/45">O endereço <span className="break-all font-mono">/g/{group.slug}</span> continuará o mesmo após renomear.</p></div>
           <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2"><label className="min-w-0 text-sm font-bold">Nome<input name="name" defaultValue={group.name} maxLength={100} required className={inputClassName} /></label><label className="min-w-0 text-sm font-bold">Instituição<input name="institution" defaultValue={group.institution} maxLength={120} required className={inputClassName} /></label></div>
           <label className="mt-4 block text-sm font-bold">Fuso horário<select name="timezone" defaultValue={group.timezone} className={inputClassName}><option value="America/Sao_Paulo">Brasília (São Paulo)</option><option value="America/Manaus">Manaus</option><option value="America/Cuiaba">Cuiabá</option><option value="America/Recife">Recife</option><option value="America/Fortaleza">Fortaleza</option><option value="America/Belem">Belém</option><option value="America/Rio_Branco">Rio Branco</option><option value="America/Noronha">Fernando de Noronha</option></select></label>
-          {detailsMutation.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{detailsMutation.error.message}</p>}{detailsMutation.isSuccess && <p role="status" className="mt-4 rounded-xl bg-[var(--sage)] p-3 text-sm font-semibold text-white">✓ Dados do grupo atualizados.</p>}
+          {detailsMutation.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{detailsMutation.error.message}</p>}{detailsMutation.isSuccess && <p role="status" className="mt-4 flex items-center gap-2 rounded-xl bg-[var(--sage)] p-3 text-sm font-semibold text-white"><Check aria-hidden="true" className="size-4" />Dados do grupo atualizados.</p>}
           <button disabled={detailsMutation.isPending} className="mt-5 rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{detailsMutation.isPending ? "Salvando…" : "Salvar dados do grupo"}</button>
         </form>
 
@@ -73,7 +74,7 @@ export function GroupSettingsPage({ groupSlug }: { groupSlug: string }) {
 
         {hasInvalidRange && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">O encerramento precisa ser posterior à abertura.</p>}
         {(windowsQuery.error || saveMutation.error) && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{windowsQuery.error?.message || saveMutation.error?.message}</p>}
-        {saveMutation.isSuccess && <p role="status" className="mt-5 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">✓ Limites atualizados para todo o grupo.</p>}
+        {saveMutation.isSuccess && <p role="status" className="mt-5 flex items-center gap-2 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white"><Check aria-hidden="true" className="size-4" />Limites atualizados para todo o grupo.</p>}
         <button type="button" onClick={() => saveMutation.mutate()} disabled={hasInvalidRange || saveMutation.isPending} className="mt-6 w-full rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto">{saveMutation.isPending ? "Salvando…" : "Salvar horários do grupo"}</button>
       </div>
     </AppShell>

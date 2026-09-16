@@ -2,7 +2,7 @@ import { formatMealAvailability, parseMealAvailability, resolveMealForDate, type
 import type { WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
-const mealLabels: Record<MealType, string> = { BREAKFAST: "☕ Desjejum", LUNCH: "🍛 Almoço", DINNER: "🌙 Jantar" };
+const mealLabels: Record<MealType, string> = { BREAKFAST: "Desjejum", LUNCH: "Almoço", DINNER: "Jantar" };
 
 export function getWorkWeekDates(referenceDate?: string) {
   const today = referenceDate ? new Date(`${referenceDate}T12:00:00`) : new Date();

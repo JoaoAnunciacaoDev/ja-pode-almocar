@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { Crown } from "lucide-react";
 import { useState } from "react";
 
 import { deleteGroup, leaveGroup, removeGroupMember, transferGroupOwnership, type GroupDetails } from "@/features/groups/api/groups-api";
@@ -50,7 +51,7 @@ export function GroupMembersPanel({ group, currentUserId, onFeedback }: { group:
     <section className="min-w-0 rounded-[28px] border border-black/8 bg-white p-5 shadow-[0_18px_60px_rgba(42,35,28,.07)] sm:p-6">
       <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-black/40">Participantes</p><h2 className="mt-1 text-xl font-bold">{group.members.length} {group.members.length === 1 ? "integrante" : "integrantes"}</h2></div>
       <ul className="mt-5 divide-y divide-black/7">
-        {group.members.map((member) => <li key={member.id} className="flex items-center justify-between gap-3 py-4"><div className="flex min-w-0 items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--peach)] text-xs font-extrabold text-[var(--tomato-dark)]">{initials(member.name)}</span><div className="min-w-0"><p className="truncate text-sm font-bold">{member.name}</p><p className="text-xs text-black/40">{member.role === "OWNER" ? "Proprietário" : "Integrante"}</p></div></div>{member.role === "OWNER" ? <span title="Proprietário">👑</span> : isOwner && <button disabled={pending} type="button" onClick={() => setConfirmation({ title: `Remover ${member.name}?`, description: "Os horários e rotinas dessa pessoa neste grupo também serão apagados.", confirmLabel: "Remover integrante", action: () => removeMutation.mutate(member.id) })} className="shrink-0 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Remover</button>}</li>)}
+        {group.members.map((member) => <li key={member.id} className="flex items-center justify-between gap-3 py-4"><div className="flex min-w-0 items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--peach)] text-xs font-extrabold text-[var(--tomato-dark)]">{initials(member.name)}</span><div className="min-w-0"><p className="truncate text-sm font-bold">{member.name}</p><p className="text-xs text-black/40">{member.role === "OWNER" ? "Proprietário" : "Integrante"}</p></div></div>{member.role === "OWNER" ? <Crown aria-label="Proprietário" className="size-5 text-[var(--tomato)]" /> : isOwner && <button disabled={pending} type="button" onClick={() => setConfirmation({ title: `Remover ${member.name}?`, description: "Os horários e rotinas dessa pessoa neste grupo também serão apagados.", confirmLabel: "Remover integrante", action: () => removeMutation.mutate(member.id) })} className="shrink-0 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-40">Remover</button>}</li>)}
       </ul>
     </section>
 

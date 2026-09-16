@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Check } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -63,7 +64,7 @@ export function NotificationSettingsPage() {
 
         {preferencesQuery.isLoading && <p className="mt-5 text-sm text-black/45">Carregando preferências…</p>}
         {(preferencesQuery.error || saveMutation.error) && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{preferencesQuery.error?.message || saveMutation.error?.message}</p>}
-        {saveMutation.isSuccess && <p role="status" className="mt-5 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">✓ Preferências salvas.</p>}
+        {saveMutation.isSuccess && <p role="status" className="mt-5 flex items-center gap-2 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white"><Check aria-hidden="true" className="size-4" />Preferências salvas.</p>}
         <button type="button" disabled={!override || saveMutation.isPending} onClick={() => saveMutation.mutate()} className="mt-6 w-full rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto">{saveMutation.isPending ? "Salvando…" : "Salvar preferências"}</button>
       </div>
     </AppShell>

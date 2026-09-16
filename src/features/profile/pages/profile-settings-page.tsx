@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { Check } from "lucide-react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { deleteOwnAccount, updateEmail, updatePassword, updateProfile } from "@/features/profile/api/profile-api";
@@ -26,7 +27,7 @@ export function ProfileSettingsPage() {
 
   return <AppShell><div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 lg:py-12">
     <p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--tomato)]">Minha conta</p><h1 className="mt-2 font-serif text-4xl font-bold">Configurações do perfil</h1>
-    {feedback && <p role="status" className="mt-5 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">✓ {feedback}</p>}
+    {feedback && <p role="status" className="mt-5 flex items-center gap-2 rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white"><Check aria-hidden="true" className="size-4" />{feedback}</p>}
     {error && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
     <div className="mt-8 space-y-5">
       <form onSubmit={(event) => { event.preventDefault(); void run("name", () => updateProfile(field(event, "name")), "Nome atualizado."); }} className="rounded-[24px] bg-white p-6"><h2 className="text-xl font-bold">Nome</h2><label className="mt-4 block text-sm font-bold">Nome exibido<input name="name" defaultValue={String(user?.user_metadata.name ?? "")} maxLength={100} required className={inputClassName} /></label><button disabled={busy !== null} className="mt-4 rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:opacity-40">Salvar nome</button></form>
@@ -36,4 +37,3 @@ export function ProfileSettingsPage() {
     </div>
   </div></AppShell>;
 }
-

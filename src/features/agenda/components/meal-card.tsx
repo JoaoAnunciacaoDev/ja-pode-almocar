@@ -1,3 +1,6 @@
+import { Check } from "lucide-react";
+
+import { MealIcon } from "@/features/agenda/components/meal-icon";
 import { formatMealAvailability, type DailyMeal, type MealOccurrence, type MealStatus } from "@/features/agenda/model/meals";
 
 const statusLabel: Record<MealStatus, string> = { CONFIRMED: "Confirmado", PLANNED: "Planejado", NOT_GOING: "Não vai" };
@@ -13,7 +16,7 @@ export function MealCard({ meal, onEdit, onWaitFor }: MealCardProps) {
     <article className="rounded-[28px] border border-black/8 bg-white p-5 shadow-[0_18px_60px_rgba(42,35,28,.07)] sm:p-6">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-2xl bg-[var(--cream)] text-2xl">{meal.emoji}</span>
+          <span className="grid size-11 place-items-center rounded-2xl bg-[var(--cream)] text-[var(--tomato-dark)]"><MealIcon mealType={meal.type} className="size-6" /></span>
           <div><h2 className="text-xl font-extrabold">{meal.label}</h2><p className="text-xs text-black/45">{meal.people.length} pessoas</p></div>
         </div>
       </div>
@@ -46,9 +49,7 @@ export function MealCard({ meal, onEdit, onWaitFor }: MealCardProps) {
             <p className={`mt-0.5 font-extrabold text-[var(--tomato-dark)] ${meal.mine.waitingFor ? "" : "font-mono"}`}>{meal.mine.waitingFor?.name ?? formatMealAvailability(meal.mine.time, meal.mine.availableUntil)}</p>
           </div>
           <button type="button" onClick={onEdit} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[var(--tomato-dark)] shadow-sm transition hover:-translate-y-0.5 hover:shadow">
-            {meal.mine.waitingFor
-              ? "Alterar"
-              : `${meal.mine.status === "CONFIRMED" ? "✓ " : ""}${statusLabel[meal.mine.status]} · Editar`}
+            {meal.mine.waitingFor ? "Alterar" : <span className="flex items-center gap-1">{meal.mine.status === "CONFIRMED" && <Check aria-hidden="true" className="size-3.5" />}{statusLabel[meal.mine.status]} · Editar</span>}
           </button>
         </div>
       ) : (

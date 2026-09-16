@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Bell, LogOut, Settings, User, Utensils } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
@@ -22,7 +23,7 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
       <header className="border-b border-black/8 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between px-5 py-4 sm:px-8">
           <Link to={groupSlug ? "/g/$groupSlug/hoje" : "/grupos"} params={groupSlug ? { groupSlug } : {}} className="flex items-center gap-3 font-bold tracking-tight">
-            <span className="grid size-10 place-items-center rounded-2xl bg-[var(--tomato)] text-xl shadow-[0_8px_24px_rgba(220,80,52,.22)]">🍽️</span>
+            <span className="grid size-10 place-items-center rounded-2xl bg-[var(--tomato)] text-white shadow-[0_8px_24px_rgba(220,80,52,.22)]"><Utensils aria-hidden="true" className="size-5" /></span>
             <span className="hidden sm:inline">Já pode almoçar?</span>
           </Link>
           <div className="flex items-center gap-3">
@@ -30,7 +31,7 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
             <Link to="/grupos" className="rounded-full px-3 py-2 text-sm font-bold text-black/55 hover:bg-black/5 md:hidden">Grupos</Link>
             <Link to="/grupos" className="hidden rounded-full px-3 py-2 text-sm font-bold text-black/55 hover:bg-black/5 md:block">Meus grupos</Link>
             {groupSlug && <Link to="/g/$groupSlug/configuracoes" params={{ groupSlug }} aria-label="Configurar grupo" className="grid size-9 place-items-center rounded-full text-sm font-bold text-[var(--tomato)] hover:bg-[var(--blush)] lg:flex lg:w-auto lg:px-3">
-              <span className="lg:hidden">⚙️</span><span className="hidden lg:inline">Configurar grupo</span>
+              <Settings aria-hidden="true" className="size-4 lg:hidden" /><span className="hidden lg:inline">Configurar grupo</span>
             </Link>}
             <details className="group relative">
               <summary title={displayName} aria-label="Abrir menu do perfil" className="grid size-10 list-none cursor-pointer place-items-center rounded-full bg-[var(--ink)] text-sm font-bold text-white transition hover:bg-[var(--tomato)] focus:outline-none focus:ring-4 focus:ring-[var(--tomato)]/15 [&::-webkit-details-marker]:hidden">{initials}</summary>
@@ -39,9 +40,9 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
                   <p className="truncate text-sm font-extrabold">{displayName}</p>
                   <p className="mt-0.5 truncate text-xs text-black/40">{user?.email}</p>
                 </div>
-                <Link to="/configuracoes/perfil" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><span aria-hidden="true">👤</span> Configurações do perfil</Link>
-                <Link to="/configuracoes/notificacoes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><span aria-hidden="true">🔔</span> Configurações de notificações</Link>
-                <button type="button" onClick={signOut} className="flex w-full items-center gap-3 border-t border-black/7 px-4 py-3 text-left text-sm font-bold text-[var(--tomato-dark)] transition hover:bg-[var(--blush)]"><span aria-hidden="true">↪</span> Sair da conta</button>
+                <Link to="/configuracoes/perfil" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><User aria-hidden="true" className="size-4" />Configurações do perfil</Link>
+                <Link to="/configuracoes/notificacoes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><Bell aria-hidden="true" className="size-4" />Configurações de notificações</Link>
+                <button type="button" onClick={signOut} className="flex w-full items-center gap-3 border-t border-black/7 px-4 py-3 text-left text-sm font-bold text-[var(--tomato-dark)] transition hover:bg-[var(--blush)]"><LogOut aria-hidden="true" className="size-4" />Sair da conta</button>
               </div>
             </details>
           </div>
