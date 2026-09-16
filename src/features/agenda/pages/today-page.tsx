@@ -4,13 +4,13 @@ import { Check, Hand, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { fetchDailyAgenda, saveDailyEntry } from "@/features/agenda/api/agenda-api";
-import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda as saveWeeklyAgendaRemote } from "@/features/agenda/api/weekly-agenda-api";
+import { fetchWeeklyAgenda, getWorkWeekDates } from "@/features/agenda/api/weekly-agenda-api";
 import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
 import { MealIcon } from "@/features/agenda/components/meal-icon";
 import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialog";
 import { formatMealAvailability, type DailyMeal, type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
-import { cycleWeeklyTime, emptyWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
+import { emptyWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
@@ -44,8 +44,7 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
   const meals = agendaQuery.data ?? [];
   const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00", availableUntil: null });
   const mealWindows = windowsQuery.data ?? defaultMealWindows;
-  const [weeklyRowsOverride, setWeeklyRowsOverride] = useState<typeof emptyWeeklyAgenda | null>(null);
-  const weeklyRows = weeklyRowsOverride ?? weeklyQuery.data ?? emptyWeeklyAgenda;
+  const weeklyRows = weeklyQuery.data ?? emptyWeeklyAgenda;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [waitTarget, setWaitTarget] = useState<{ mealType: MealType; person: MealOccurrence } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -63,12 +62,10 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
     const next = new Date(`${date}T12:00:00Z`);
     next.setUTCDate(next.getUTCDate() + days);
     setSelectedDate(next.toISOString().slice(0, 10));
-    setWeeklyRowsOverride(null);
   }
 
   function selectDate(nextDate: string) {
     setSelectedDate(nextDate === currentDate ? null : nextDate);
-    setWeeklyRowsOverride(null);
   }
 
   function openEditor(mealType: MealType = "LUNCH") {
@@ -131,15 +128,6 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
     setWaitTarget(null);
   }
 
-  async function changeQuickWeekTime(mealType: MealType, dayIndex: number) {
-    if (!group || !user) return;
-    const nextRows = cycleWeeklyTime(weeklyRows, mealType, dayIndex, mealWindows);
-    setWeeklyRowsOverride(nextRows);
-    await saveWeeklyAgendaRemote(group.id, user.id, weekDates, nextRows);
-    await queryClient.invalidateQueries({ queryKey: ["weekly-agenda", group.id] });
-    setNotice("Horário semanal atualizado.");
-  }
-
   if (groupQuery.isLoading || agendaQuery.isLoading) return <AppShell groupSlug={groupSlug}><div className="mx-auto max-w-6xl px-5 py-16 text-center text-sm text-black/45">Carregando agenda…</div></AppShell>;
   if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><Search aria-hidden="true" className="mx-auto size-10 text-[var(--tomato)]" /><h1 className="mt-5 font-serif text-3xl font-bold">Grupo não encontrado</h1><p className="mt-3 text-sm text-black/45">Você pode não fazer mais parte deste grupo.</p><Link to="/grupos" className="mt-6 inline-block rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Ver meus grupos</Link></div></AppShell>;
 
@@ -184,14 +172,14 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
                   <button type="button" onClick={() => selectDate(weekDate)} aria-label={`Ver agenda de ${weekDayNames[index]}, dia ${weekDate.slice(-2)}`} aria-current={weekDate === date ? "date" : undefined} className={`w-full rounded-2xl py-2 transition hover:bg-[var(--peach)] ${weekDate === date ? "bg-[var(--lemon)] ring-2 ring-[var(--tomato)]/20" : "bg-[var(--cream)]"}`}>
                     <span className="block text-[10px] font-bold uppercase text-black/45">{weekDayNames[index]}</span><span className="text-lg font-extrabold">{weekDate.slice(-2)}</span>
                   </button>
-                  <button type="button" onClick={() => changeQuickWeekTime("BREAKFAST", index)} aria-label={`Alterar desjejum de ${weekDayNames[index]}`} className="mt-3 block w-full rounded-lg py-1 font-mono text-xs text-black/40 hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "BREAKFAST", index)}</button>
-                  <button type="button" onClick={() => changeQuickWeekTime("LUNCH", index)} aria-label={`Alterar almoço de ${weekDayNames[index]}`} className="mt-1 block w-full rounded-lg py-1 font-mono text-xs font-bold hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "LUNCH", index)}</button>
-                  <button type="button" onClick={() => changeQuickWeekTime("DINNER", index)} aria-label={`Alterar jantar de ${weekDayNames[index]}`} className="mt-1 block w-full rounded-lg py-1 font-mono text-xs text-black/40 hover:bg-[var(--blush)] hover:text-[var(--tomato-dark)]">{getWeeklyTime(weeklyRows, "DINNER", index)}</button>
+                  <span className="mt-3 block w-full py-1 font-mono text-xs text-black/40">{getWeeklyTime(weeklyRows, "BREAKFAST", index)}</span>
+                  <span className="mt-1 block w-full py-1 font-mono text-xs font-bold">{getWeeklyTime(weeklyRows, "LUNCH", index)}</span>
+                  <span className="mt-1 block w-full py-1 font-mono text-xs text-black/40">{getWeeklyTime(weeklyRows, "DINNER", index)}</span>
                 </div>
               ))}
             </div>
             <div className="mt-5 flex flex-wrap items-center gap-5 border-t border-black/7 pt-4 text-xs text-black/45"><span className="flex items-center gap-1.5"><MealIcon mealType="BREAKFAST" className="size-3.5" />desjejum</span><span className="flex items-center gap-1.5"><MealIcon mealType="LUNCH" className="size-3.5" />almoço</span><span className="flex items-center gap-1.5"><MealIcon mealType="DINNER" className="size-3.5" />jantar</span></div>
-            <p className="mt-3 text-[11px] text-black/35">Clique em um dia para abrir sua agenda. Clique em um horário para avançar um intervalo.</p>
+            <p className="mt-3 text-[11px] text-black/35">Clique em um dia para abrir a agenda correspondente. Use “Editar” para alterar os horários da semana.</p>
           </section>
           <section className="rounded-[28px] bg-[var(--sage)] p-5 text-white shadow-[0_18px_50px_rgba(49,91,72,.18)]">
             {pendingMeals.length ? <Hand aria-hidden="true" className="size-8" /> : <Check aria-hidden="true" className="size-8" />}<h2 className="mt-3 text-xl font-bold">{pendingMeals.length ? `${pendingMeals.length} ${pendingMeals.length === 1 ? "horário para confirmar" : "horários para confirmar"}` : date === currentDate ? "Tudo confirmado por hoje" : "Tudo confirmado neste dia"}</h2>
