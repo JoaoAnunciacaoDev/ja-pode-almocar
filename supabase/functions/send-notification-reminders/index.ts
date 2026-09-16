@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import {
   buildNotificationEmail,
   parseSender,
@@ -34,15 +34,17 @@ type MealRoutineRow = {
   available_until: string | null;
 };
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL");
-const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const brevoApiKey = Deno.env.get("BREVO_API_KEY");
-const emailFrom = Deno.env.get("EMAIL_FROM");
-const appUrl = Deno.env.get("APP_URL");
-
-if (!supabaseUrl || !serviceRoleKey || !brevoApiKey || !emailFrom || !appUrl) {
-  throw new Error("Missing one or more required notification environment variables");
+function requireEnv(name: string) {
+  const value = Deno.env.get(name);
+  if (!value) throw new Error(`Missing required notification environment variable: ${name}`);
+  return value;
 }
+
+const supabaseUrl = requireEnv("SUPABASE_URL");
+const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+const brevoApiKey = requireEnv("BREVO_API_KEY");
+const emailFrom = requireEnv("EMAIL_FROM");
+const appUrl = requireEnv("APP_URL");
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },

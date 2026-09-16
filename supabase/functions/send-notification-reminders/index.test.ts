@@ -26,6 +26,7 @@ describe("notification email helpers", () => {
 
     expect(email.subject).toBe("Resumo do almoço em Equipe Produto");
     expect(email.html).toContain("12:30–13:00 · confirmado");
+    expect(email.html).toContain("Desculpa a ansiedade, mas… já pode almoçar?");
     expect(email.html).toContain("https://example.com/g/equipe-produto/hoje");
   });
 

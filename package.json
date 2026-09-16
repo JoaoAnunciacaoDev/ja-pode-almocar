@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc --noEmit",
+    "build": "vite build && tsc --noEmit && bun run typecheck:functions",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && bun run typecheck:functions",
+    "typecheck:functions": "tsc --noEmit -p supabase/functions/tsconfig.json",
     "lint": "eslint .",
     "test": "bun test",
     "test:rls": "bun test tests/rls.e2e.test.ts"

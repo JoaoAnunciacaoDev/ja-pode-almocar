@@ -61,6 +61,7 @@ function emailLayout(title: string, intro: string, content: string, actionLabel:
     <div style="max-width:600px;margin:0 auto;padding:32px 18px">
       <div style="background:#fff;border-radius:24px;padding:32px;box-shadow:0 8px 30px rgba(52,45,35,.08)">
         <p style="margin:0 0 8px;color:#df5d3f;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Já pode almoçar?</p>
+        <p style="margin:0 0 18px;color:#8b857b;font-size:14px;font-style:italic">Desculpa a ansiedade, mas… já pode almoçar?</p>
         <h1 style="margin:0 0 16px;font-size:26px;line-height:1.2">${escapeHtml(title)}</h1>
         <p style="margin:0 0 22px;line-height:1.6;color:#625d54">${escapeHtml(intro)}</p>
         ${content}

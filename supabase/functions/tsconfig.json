@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "types": ["bun"]
+  },
+  "include": ["./**/*.ts", "./deno-globals.d.ts"]
+}
