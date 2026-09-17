@@ -49,3 +49,11 @@ export function clearWeeklyTime(rows: WeeklyAgendaRow[], mealType: MealType, col
 export function getWeeklyTime(rows: WeeklyAgendaRow[], mealType: MealType, columnIndex: number) {
   return rows.find((row) => row.mealType === mealType)?.values[columnIndex] ?? "—";
 }
+
+export function getWeeklyAgendaChanges(rows: WeeklyAgendaRow[], baseline: WeeklyAgendaRow[]) {
+  return rows.flatMap((row) => row.values.flatMap((value, columnIndex) =>
+    value === getWeeklyTime(baseline, row.mealType, columnIndex)
+      ? []
+      : [{ mealType: row.mealType, columnIndex, value }],
+  ));
+}

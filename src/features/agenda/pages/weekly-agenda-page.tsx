@@ -28,8 +28,9 @@ export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
   const rows = rowsOverride ?? weekQuery.data ?? emptyWeeklyAgenda;
   const windows = windowsQuery.data ?? defaultMealWindows;
   const saveMutation = useMutation({
-    mutationFn: () => saveWeeklyAgenda(group!.id, user!.id, dates, rows),
+    mutationFn: () => saveWeeklyAgenda(group!.id, user!.id, dates, rows, weekQuery.data ?? emptyWeeklyAgenda),
     onSuccess: async () => {
+      setRowsOverride(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["weekly-agenda", group?.id] }),
         queryClient.invalidateQueries({ queryKey: ["daily-agenda", group?.id] }),

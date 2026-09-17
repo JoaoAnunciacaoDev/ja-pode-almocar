@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { clearWeeklyTime, cycleWeeklyTime, getWeeklyTime, type WeeklyAgendaRow } from "./weekly-agenda";
+import { clearWeeklyTime, cycleWeeklyTime, getWeeklyAgendaChanges, getWeeklyTime, type WeeklyAgendaRow } from "./weekly-agenda";
 
 const weeklyAgendaFixture: WeeklyAgendaRow[] = [
   { mealType: "BREAKFAST", meal: "Desjejum", values: ["—", "08:00", "—", "08:10", "—"] },
@@ -32,5 +32,12 @@ describe("weekly agenda interactions", () => {
     expect(getWeeklyTime(updated, "LUNCH", 2)).toBe("—");
     expect(getWeeklyTime(updated, "LUNCH", 1)).toBe("11:30");
     expect(getWeeklyTime(updated, "DINNER", 2)).toBe("17:30");
+  });
+
+  test("returns only cells changed from the loaded week", () => {
+    const updated = cycleWeeklyTime(weeklyAgendaFixture, "LUNCH", 0, defaultMealWindows);
+    expect(getWeeklyAgendaChanges(updated, weeklyAgendaFixture)).toEqual([
+      { mealType: "LUNCH", columnIndex: 0, value: "12:10" },
+    ]);
   });
 });

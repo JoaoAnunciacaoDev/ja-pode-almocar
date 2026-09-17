@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { inputClassName, primaryButtonClassName } from "@/shared/components/form-styles";
+import { PasswordInput } from "@/shared/components/password-input";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 export function SignupPage({ inviteCode }: { inviteCode?: string }) {
@@ -46,7 +47,7 @@ export function SignupPage({ inviteCode }: { inviteCode?: string }) {
       <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block text-sm font-bold">Nome<input className={inputClassName} name="name" autoComplete="name" placeholder="Como seus amigos te chamam?" required /></label>
         <label className="block text-sm font-bold">E-mail<input className={inputClassName} type="email" name="email" autoComplete="email" placeholder="voce@universidade.edu.br" required /></label>
-        <label className="block text-sm font-bold">Senha<input className={inputClassName} type="password" name="password" autoComplete="new-password" minLength={6} placeholder="Mínimo de 6 caracteres" required /></label>
+        <label className="block text-sm font-bold">Senha<PasswordInput name="password" autoComplete="new-password" minLength={6} placeholder="Mínimo de 6 caracteres" required /></label>
         {errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}
         {message && <p role="status" className="rounded-2xl bg-[var(--sage)] px-4 py-3 text-sm font-semibold text-white">{message}</p>}
         <button className={primaryButtonClassName} disabled={loading || Boolean(message)}>{loading ? "Criando…" : "Criar conta"}</button>

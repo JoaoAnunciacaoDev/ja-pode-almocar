@@ -1,5 +1,5 @@
 import { formatMealAvailability, parseMealAvailability, resolveMealForDate, type MealEntry, type MealRoutine, type MealType } from "@/features/agenda/model/meals";
-import type { WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
+import { getWeeklyAgendaChanges, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 const mealLabels: Record<MealType, string> = { BREAKFAST: "Desjejum", LUNCH: "Almoço", DINNER: "Jantar" };
@@ -37,20 +37,21 @@ export async function fetchWeeklyAgenda(groupId: string, userId: string, dates: 
   }));
 }
 
-export async function saveWeeklyAgenda(groupId: string, userId: string, dates: string[], rows: WeeklyAgendaRow[]) {
-  const values = rows.flatMap((row) => row.values.map((value, index) => {
+export async function saveWeeklyAgenda(groupId: string, userId: string, dates: string[], rows: WeeklyAgendaRow[], baseline: WeeklyAgendaRow[]) {
+  const values = getWeeklyAgendaChanges(rows, baseline).map(({ mealType, columnIndex, value }) => {
     const availability = parseMealAvailability(value);
     return {
       group_id: groupId,
       user_id: userId,
-      date: dates[index],
-      meal_type: row.mealType,
+      date: dates[columnIndex],
+      meal_type: mealType,
       time: availability.time,
       available_until: availability.availableUntil,
       status: availability.time === null ? "NOT_GOING" as const : "PLANNED" as const,
       waiting_for_user_id: null,
     };
-  }));
+  });
+  if (values.length === 0) return;
   const { error } = await requireSupabaseClient().from("meal_entries").upsert(values, { onConflict: "group_id,user_id,date,meal_type" });
   if (error) throw error;
 }

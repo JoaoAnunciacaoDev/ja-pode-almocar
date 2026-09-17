@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { inputClassName, primaryButtonClassName } from "@/shared/components/form-styles";
+import { PasswordInput } from "@/shared/components/password-input";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 import { getErrorMessage } from "@/shared/utils/app-error";
 
@@ -36,7 +37,7 @@ export function LoginPage({ inviteCode }: { inviteCode?: string }) {
     <AuthShell eyebrow="Bem-vindo de volta" title="Entrar" description="Acesse seus grupos e confira quem vai ao bandejão hoje.">
       <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block text-sm font-bold">E-mail<input className={inputClassName} type="email" name="email" autoComplete="email" placeholder="voce@universidade.edu.br" required /></label>
-        <div><div className="flex items-center justify-between"><label htmlFor="password" className="text-sm font-bold">Senha</label><Link to="/esqueci-senha" className="text-xs font-bold text-[var(--tomato)]">Esqueci minha senha</Link></div><input id="password" className={inputClassName} type="password" name="password" autoComplete="current-password" minLength={6} required /></div>
+        <div><div className="flex items-center justify-between"><label htmlFor="password" className="text-sm font-bold">Senha</label><Link to="/esqueci-senha" className="text-xs font-bold text-[var(--tomato)]">Esqueci minha senha</Link></div><PasswordInput id="password" name="password" autoComplete="current-password" minLength={6} required /></div>
         {errorMessage && <p role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}
         <button className={primaryButtonClassName} disabled={loading}>{loading ? "Entrando…" : "Entrar"}</button>
       </form>
