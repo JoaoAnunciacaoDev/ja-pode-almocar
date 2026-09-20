@@ -13,7 +13,12 @@ export type GroupSummary = {
   memberCount: number;
 };
 
-export type GroupMemberView = { id: string; name: string; email: string; role: "OWNER" | "MEMBER" };
+export type GroupMemberView = {
+  id: string; 
+  name: string;
+  role: "OWNER" | "MEMBER" 
+};
+
 export type GroupDetails = GroupSummary & { members: GroupMemberView[] };
 export type GroupInvitePreview = { groupId: string; groupName: string; institution: string; memberCount: number };
 
@@ -62,14 +67,14 @@ async function fetchGroupBy(column: "id" | "slug", value: string): Promise<Group
 
   const ids = (memberships ?? []).map((membership) => membership.user_id);
   const { data: profiles, error: profilesError } = ids.length
-    ? await client.from("profiles").select("id,name,email").in("id", ids)
+    ? await client.from("profiles").select("id,name").in("id", ids)
     : { data: [], error: null };
   if (profilesError) throw profilesError;
 
   const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
   const members = (memberships ?? []).map((membership) => {
     const profile = profileById.get(membership.user_id);
-    return { id: membership.user_id, name: profile?.name ?? "Integrante", email: profile?.email ?? "", role: membership.role as "OWNER" | "MEMBER" };
+    return { id: membership.user_id, name: profile?.name ?? "Integrante", role: membership.role as "OWNER" | "MEMBER" };
   });
 
   return {
