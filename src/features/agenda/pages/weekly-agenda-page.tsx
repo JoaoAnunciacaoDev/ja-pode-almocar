@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { fetchWeeklyAgenda, getWorkWeekDates, saveWeeklyAgenda } from "@/features/agenda/api/weekly-agenda-api";
 import { MealIcon } from "@/features/agenda/components/meal-icon";
-import { clearWeeklyTime, cycleWeeklyTime, emptyWeeklyAgenda, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
+import { clearWeeklyTime, createEmptyWeeklyAgenda, cycleWeeklyTime, type WeeklyAgendaRow } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
@@ -13,22 +13,30 @@ import { defaultMealWindows } from "@/features/groups/model/meal-windows";
 import { AppShell } from "@/shared/components/app-shell";
 import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 
-const dayNames = ["SEG", "TER", "QUA", "QUI", "SEX"];
+const dayNames = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+
+function dayName(date: string) {
+  return dayNames[new Date(`${date}T12:00:00Z`).getUTCDay()];
+}
 
 export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const dates = useMemo(() => getWorkWeekDates(), []);
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
+  const dates = useMemo(() => getWorkWeekDates(undefined, {
+    includeSaturday: group?.includeSaturday,
+    includeSunday: group?.includeSunday,
+  }), [group?.includeSaturday, group?.includeSunday]);
+  const emptyRows = useMemo(() => createEmptyWeeklyAgenda(dates.length), [dates.length]);
   useGroupRealtime(group?.id);
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const weekQuery = useQuery({ queryKey: ["weekly-agenda", group?.id, dates[0]], queryFn: () => fetchWeeklyAgenda(group!.id, user!.id, dates), enabled: Boolean(group && user) });
   const [rowsOverride, setRowsOverride] = useState<WeeklyAgendaRow[] | null>(null);
-  const rows = rowsOverride ?? weekQuery.data ?? emptyWeeklyAgenda;
+  const rows = rowsOverride ?? weekQuery.data ?? emptyRows;
   const windows = windowsQuery.data ?? defaultMealWindows;
   const saveMutation = useMutation({
-    mutationFn: () => saveWeeklyAgenda(group!.id, user!.id, dates, rows, weekQuery.data ?? emptyWeeklyAgenda),
+    mutationFn: () => saveWeeklyAgenda(group!.id, user!.id, dates, rows, weekQuery.data ?? emptyRows),
     onSuccess: async () => {
       setRowsOverride(null);
       await Promise.all([
@@ -63,15 +71,15 @@ export function WeeklyAgendaPage({ groupSlug }: { groupSlug: string }) {
         {(weekQuery.error || saveMutation.error) && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{weekQuery.error?.message || saveMutation.error?.message}</p>}
         <p className="mt-5 text-sm text-black/50">Clique em um horário para avançar pelas opções ou use “×” para removê-lo. Os horários respeitam os limites definidos pelo proprietário; “—” indica que você não irá.</p>
         <div className="mt-8 overflow-x-auto rounded-[28px] border border-black/8 bg-white p-5 shadow-[0_18px_60px_rgba(42,35,28,.07)]">
-          <div className="grid min-w-[680px] grid-cols-[160px_repeat(5,1fr)] gap-2">
+          <div className="grid min-w-[680px] gap-2" style={{ gridTemplateColumns: `160px repeat(${dates.length}, minmax(0, 1fr))` }}>
             <div />
-            {dates.map((date, index) => <div key={date} className="rounded-xl bg-[var(--cream)] px-3 py-3 text-center text-xs font-extrabold">{dayNames[index]} {date.slice(-2)}</div>)}
+            {dates.map((date) => <div key={date} className="rounded-xl bg-[var(--cream)] px-3 py-3 text-center text-xs font-extrabold">{dayName(date)} {date.slice(-2)}</div>)}
             {rows.flatMap((row, rowIndex) => [
               <div key={`${row.meal}-label`} className="flex items-center gap-2 font-bold"><MealIcon mealType={row.mealType} className="size-4 text-[var(--tomato)]" />{row.meal}</div>,
               ...row.values.map((value, index) => (
                 <div key={`${row.meal}-${index}`} className="relative">
                   <button type="button" onClick={() => cycleTime(rowIndex, index)} aria-label={`${row.meal}, alterar horário de ${value}`} className="h-full min-h-14 w-full rounded-xl border border-black/8 px-3 py-4 pr-9 font-mono text-sm font-bold hover:border-[var(--tomato)] hover:bg-[var(--blush)]">{value}</button>
-                  <button type="button" disabled={value === "—"} onClick={() => clearTime(rowIndex, index)} aria-label={`${row.meal}, remover horário de ${dayNames[index]}`} title="Remover horário" className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-lg text-base font-bold text-black/35 hover:bg-red-50 hover:text-red-700 disabled:cursor-default disabled:opacity-20">×</button>
+                  <button type="button" disabled={value === "—"} onClick={() => clearTime(rowIndex, index)} aria-label={`${row.meal}, remover horário de ${dayName(dates[index])}`} title="Remover horário" className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-lg text-base font-bold text-black/35 hover:bg-red-50 hover:text-red-700 disabled:cursor-default disabled:opacity-20">×</button>
                 </div>
               )),
             ])}

@@ -8,6 +8,8 @@ export type GroupSummary = {
   institution: string;
   ownerId: string;
   timezone: string;
+  includeSaturday: boolean;
+  includeSunday: boolean;
   memberCount: number;
 };
 
@@ -18,7 +20,7 @@ export type GroupInvitePreview = { groupId: string; groupName: string; instituti
 export async function fetchGroups(): Promise<GroupSummary[]> {
   const { data, error } = await requireSupabaseClient()
     .from("groups")
-    .select("id,slug,name,institution,owner_id,timezone,group_members(count)")
+    .select("id,slug,name,institution,owner_id,timezone,include_saturday,include_sunday,group_members(count)")
     .order("created_at");
   if (error) throw error;
   return (data ?? []).map((group) => ({
@@ -28,6 +30,8 @@ export async function fetchGroups(): Promise<GroupSummary[]> {
     institution: group.institution,
     ownerId: group.owner_id,
     timezone: group.timezone,
+    includeSaturday: group.include_saturday,
+    includeSunday: group.include_sunday,
     memberCount: group.group_members?.[0]?.count ?? 0,
   }));
 }
@@ -51,7 +55,7 @@ async function fetchGroupLocator(groupId: string) {
 
 async function fetchGroupBy(column: "id" | "slug", value: string): Promise<GroupDetails> {
   const client = requireSupabaseClient();
-  const { data: group, error: groupError } = await client.from("groups").select("id,slug,name,institution,owner_id,timezone").eq(column, value).single();
+  const { data: group, error: groupError } = await client.from("groups").select("id,slug,name,institution,owner_id,timezone,include_saturday,include_sunday").eq(column, value).single();
   if (groupError) throw groupError;
   const { data: memberships, error: membershipError } = await client.from("group_members").select("user_id,role").eq("group_id", group.id).order("joined_at");
   if (membershipError) throw membershipError;
@@ -75,6 +79,8 @@ async function fetchGroupBy(column: "id" | "slug", value: string): Promise<Group
     institution: group.institution,
     ownerId: group.owner_id,
     timezone: group.timezone,
+    includeSaturday: group.include_saturday,
+    includeSunday: group.include_sunday,
     memberCount: members.length,
     members,
   };
@@ -125,11 +131,13 @@ export async function deleteGroup(groupId: string) {
   if (error) throw error;
 }
 
-export async function updateGroup(groupId: string, input: { name: string; institution: string; timezone: string }) {
+export async function updateGroup(groupId: string, input: { name: string; institution: string; timezone: string; includeSaturday: boolean; includeSunday: boolean }) {
   const { error } = await requireSupabaseClient().from("groups").update({
     name: input.name.trim(),
     institution: input.institution.trim(),
     timezone: input.timezone,
+    include_saturday: input.includeSaturday,
+    include_sunday: input.includeSunday,
   }).eq("id", groupId);
   if (error) throw toAppError(error);
 }

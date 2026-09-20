@@ -10,7 +10,7 @@ import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/me
 import { MealIcon } from "@/features/agenda/components/meal-icon";
 import { WaitPersonDialog } from "@/features/agenda/components/wait-person-dialog";
 import { formatMealAvailability, type DailyMeal, type MealOccurrence, type MealType } from "@/features/agenda/model/meals";
-import { emptyWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
+import { createEmptyWeeklyAgenda, getWeeklyTime } from "@/features/agenda/model/weekly-agenda";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { fetchMealWindows } from "@/features/groups/api/meal-windows-api";
@@ -20,7 +20,11 @@ import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 
 const defaultTimes: Record<MealType, string> = { BREAKFAST: "08:00", LUNCH: "12:00", DINNER: "18:00" };
 
-const weekDayNames = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+const weekDayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function weekDayName(date: string) {
+  return weekDayNames[new Date(`${date}T12:00:00Z`).getUTCDay()];
+}
 
 function dateInTimezone(timezone: string) {
   const parts = new Intl.DateTimeFormat("pt-BR", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -37,14 +41,17 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
   const currentDate = dateInTimezone(group?.timezone ?? "America/Sao_Paulo");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const date = selectedDate ?? currentDate;
-  const weekDates = useMemo(() => getWorkWeekDates(date), [date]);
+  const weekDates = useMemo(() => getWorkWeekDates(date, {
+    includeSaturday: group?.includeSaturday,
+    includeSunday: group?.includeSunday,
+  }), [date, group?.includeSaturday, group?.includeSunday]);
   const agendaQuery = useQuery({ queryKey: ["daily-agenda", group?.id, date], queryFn: () => fetchDailyAgenda(group!.id, date, user!.id), enabled: Boolean(group && user) });
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const weeklyQuery = useQuery({ queryKey: ["weekly-agenda", group?.id, weekDates[0]], queryFn: () => fetchWeeklyAgenda(group!.id, user!.id, weekDates), enabled: Boolean(group && user) });
   const meals = agendaQuery.data ?? [];
   const [draft, setDraft] = useState<MealDraft>({ mealType: "LUNCH", status: "CONFIRMED", time: "12:00", availableUntil: null });
   const mealWindows = windowsQuery.data ?? defaultMealWindows;
-  const weeklyRows = weeklyQuery.data ?? emptyWeeklyAgenda;
+  const weeklyRows = weeklyQuery.data ?? createEmptyWeeklyAgenda(weekDates.length);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [waitTarget, setWaitTarget] = useState<{ mealType: MealType; person: MealOccurrence } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -166,11 +173,11 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
               <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-black/40">Visão rápida</p><h2 className="mt-1 text-xl font-bold">Minha semana</h2></div>
               <Link to="/g/$groupSlug/agenda" params={{ groupSlug: group.slug }} className="text-sm font-bold text-[var(--tomato)]">Editar</Link>
             </div>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${weekDates.length}, minmax(0, 1fr))` }}>
               {weekDates.map((weekDate, index) => (
                 <div key={weekDate} className="text-center">
-                  <button type="button" onClick={() => selectDate(weekDate)} aria-label={`Ver agenda de ${weekDayNames[index]}, dia ${weekDate.slice(-2)}`} aria-current={weekDate === date ? "date" : undefined} className={`w-full rounded-2xl py-2 transition hover:bg-[var(--peach)] ${weekDate === date ? "bg-[var(--lemon)] ring-2 ring-[var(--tomato)]/20" : "bg-[var(--cream)]"}`}>
-                    <span className="block text-[10px] font-bold uppercase text-black/45">{weekDayNames[index]}</span><span className="text-lg font-extrabold">{weekDate.slice(-2)}</span>
+                  <button type="button" onClick={() => selectDate(weekDate)} aria-label={`Ver agenda de ${weekDayName(weekDate)}, dia ${weekDate.slice(-2)}`} aria-current={weekDate === date ? "date" : undefined} className={`w-full rounded-2xl py-2 transition hover:bg-[var(--peach)] ${weekDate === date ? "bg-[var(--lemon)] ring-2 ring-[var(--tomato)]/20" : "bg-[var(--cream)]"}`}>
+                    <span className="block text-[10px] font-bold uppercase text-black/45">{weekDayName(weekDate)}</span><span className="text-lg font-extrabold">{weekDate.slice(-2)}</span>
                   </button>
                   <span className="mt-3 block w-full py-1 font-mono text-xs text-black/40">{getWeeklyTime(weeklyRows, "BREAKFAST", index)}</span>
                   <span className="mt-1 block w-full py-1 font-mono text-xs font-bold">{getWeeklyTime(weeklyRows, "LUNCH", index)}</span>

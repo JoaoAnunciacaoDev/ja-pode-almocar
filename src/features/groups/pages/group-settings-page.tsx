@@ -26,14 +26,20 @@ export function GroupSettingsPage({ groupSlug }: { groupSlug: string }) {
   });
   const hasInvalidRange = windows.some((window) => window.openTime >= window.closeTime);
   const detailsMutation = useMutation({
-    mutationFn: (values: { name: string; institution: string; timezone: string }) => updateGroup(group!.id, values),
+    mutationFn: (values: { name: string; institution: string; timezone: string; includeSaturday: boolean; includeSunday: boolean }) => updateGroup(group!.id, values),
     onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["groups"] }); },
   });
 
   function saveDetails(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    detailsMutation.mutate({ name: String(data.get("name")), institution: String(data.get("institution")), timezone: String(data.get("timezone")) });
+    detailsMutation.mutate({
+      name: String(data.get("name")),
+      institution: String(data.get("institution")),
+      timezone: String(data.get("timezone")),
+      includeSaturday: data.has("includeSaturday"),
+      includeSunday: data.has("includeSunday"),
+    });
   }
 
   function updateWindow(mealType: MealWindow["mealType"], changes: Partial<MealWindow>) {
@@ -55,6 +61,14 @@ export function GroupSettingsPage({ groupSlug }: { groupSlug: string }) {
           <div className="min-w-0"><h2 className="text-xl font-extrabold">Dados do grupo</h2><p className="mt-1 text-sm text-black/45">O endereço <span className="break-all font-mono">/g/{group.slug}</span> continuará o mesmo após renomear.</p></div>
           <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2"><label className="min-w-0 text-sm font-bold">Nome<input name="name" defaultValue={group.name} maxLength={100} required className={inputClassName} /></label><label className="min-w-0 text-sm font-bold">Instituição<input name="institution" defaultValue={group.institution} maxLength={120} required className={inputClassName} /></label></div>
           <label className="mt-4 block text-sm font-bold">Fuso horário<select name="timezone" defaultValue={group.timezone} className={inputClassName}><option value="America/Sao_Paulo">Brasília (São Paulo)</option><option value="America/Manaus">Manaus</option><option value="America/Cuiaba">Cuiabá</option><option value="America/Recife">Recife</option><option value="America/Fortaleza">Fortaleza</option><option value="America/Belem">Belém</option><option value="America/Rio_Branco">Rio Branco</option><option value="America/Noronha">Fernando de Noronha</option></select></label>
+          <fieldset className="mt-5">
+            <legend className="text-sm font-bold">Dias da agenda semanal</legend>
+            <p className="mt-1 text-xs leading-5 text-black/45">Segunda a sexta são sempre exibidos. Ative os dias de fim de semana em que o grupo se reúne. E-mails do grupo só serão enviados nos dias habilitados.</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm font-bold"><input type="checkbox" name="includeSaturday" defaultChecked={group.includeSaturday} className="size-4 accent-[var(--tomato)]" />Incluir sábado</label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm font-bold"><input type="checkbox" name="includeSunday" defaultChecked={group.includeSunday} className="size-4 accent-[var(--tomato)]" />Incluir domingo</label>
+            </div>
+          </fieldset>
           {detailsMutation.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{detailsMutation.error.message}</p>}{detailsMutation.isSuccess && <p role="status" className="mt-4 flex items-center gap-2 rounded-xl bg-[var(--sage)] p-3 text-sm font-semibold text-white"><Check aria-hidden="true" className="size-4" />Dados do grupo atualizados.</p>}
           <button disabled={detailsMutation.isPending} className="mt-5 rounded-2xl bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{detailsMutation.isPending ? "Salvando…" : "Salvar dados do grupo"}</button>
         </form>

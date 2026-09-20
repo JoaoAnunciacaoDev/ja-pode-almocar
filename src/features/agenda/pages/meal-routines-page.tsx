@@ -36,6 +36,7 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
   const queryClient = useQueryClient();
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
+  const availableWeekdays = weekdays.filter((day) => day.value !== 6 || group?.includeSaturday).filter((day) => day.value !== 0 || group?.includeSunday);
   useGroupRealtime(group?.id);
   const windowsQuery = useQuery({ queryKey: ["meal-windows", group?.id], queryFn: () => fetchMealWindows(group!.id), enabled: Boolean(group) });
   const routinesQuery = useQuery({ queryKey: ["meal-routines", group?.id, user?.id], queryFn: () => fetchMealRoutines(group!.id, user!.id), enabled: Boolean(group && user) });
@@ -92,7 +93,7 @@ export function MealRoutinesPage({ groupSlug }: { groupSlug: string }) {
         <div className="mt-8 grid gap-6 lg:grid-cols-[380px_1fr]">
           <form onSubmit={submit} className="h-fit rounded-[28px] border border-black/8 bg-white p-6 shadow-[0_18px_60px_rgba(42,35,28,.07)]">
             <h2 className="text-xl font-extrabold">{draft.id ? "Editar rotina" : "Nova rotina"}</h2>
-            <label className="mt-5 block text-sm font-bold">Dia da semana<select value={draft.weekday} onChange={(event) => setDraft({ ...draft, weekday: Number(event.target.value) })} className={inputClassName}>{weekdays.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}</select></label>
+            <label className="mt-5 block text-sm font-bold">Dia da semana<select value={draft.weekday} onChange={(event) => setDraft({ ...draft, weekday: Number(event.target.value) })} className={inputClassName}>{availableWeekdays.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}</select></label>
             <label className="mt-5 block text-sm font-bold">Refeição<select value={draft.mealType} onChange={(event) => changeMealType(event.target.value as MealType)} className={inputClassName}>{mealTypes.map((mealType) => <option key={mealType} value={mealType}>{mealLabels[mealType]}</option>)}</select></label>
             <label className="mt-5 block text-sm font-bold">Horário<select value={selectedTime} onChange={(event) => { const time = event.target.value; setDraft({ ...draft, time, availableUntil: draft.availableUntil ? timeOptions.find((option) => option > time) ?? null : null }); }} className={inputClassName}>{timeOptions.map((time) => <option key={time} value={time}>{time}</option>)}</select></label>
             <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm font-bold"><input type="checkbox" checked={intervalEnabled} disabled={!endTimeOptions.length} onChange={(event) => setDraft({ ...draft, availableUntil: event.target.checked ? endTimeOptions[0] : null })} className="size-4 accent-[var(--tomato)]" />Tenho uma janela de disponibilidade</label>

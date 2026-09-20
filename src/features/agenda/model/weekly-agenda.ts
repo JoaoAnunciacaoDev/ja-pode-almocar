@@ -9,6 +9,10 @@ export const emptyWeeklyAgenda: WeeklyAgendaRow[] = [
   { mealType: "DINNER", meal: "Jantar", values: ["—", "—", "—", "—", "—"] },
 ];
 
+export function createEmptyWeeklyAgenda(dayCount: number): WeeklyAgendaRow[] {
+  return emptyWeeklyAgenda.map((row) => ({ ...row, values: Array.from({ length: dayCount }, () => "—") }));
+}
+
 export function cycleWeeklyTime(
   rows: WeeklyAgendaRow[],
   mealType: MealType,

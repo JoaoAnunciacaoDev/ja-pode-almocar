@@ -4,15 +4,20 @@ import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 const mealLabels: Record<MealType, string> = { BREAKFAST: "Desjejum", LUNCH: "Almoço", DINNER: "Jantar" };
 
-export function getWorkWeekDates(referenceDate?: string) {
+export type WeekdayOptions = { includeSaturday?: boolean; includeSunday?: boolean };
+
+export function getWorkWeekDates(referenceDate?: string, options: WeekdayOptions = {}) {
   const today = referenceDate ? new Date(`${referenceDate}T12:00:00`) : new Date();
   today.setHours(12, 0, 0, 0);
   const offset = today.getDay() === 0 ? 1 : 1 - today.getDay();
   const monday = new Date(today);
   monday.setDate(today.getDate() + offset);
-  return Array.from({ length: 5 }, (_, index) => {
+  const offsets = [0, 1, 2, 3, 4];
+  if (options.includeSaturday) offsets.push(5);
+  if (options.includeSunday) offsets.push(6);
+  return offsets.map((offset) => {
     const value = new Date(monday);
-    value.setDate(monday.getDate() + index);
+    value.setDate(monday.getDate() + offset);
     return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
   });
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { clearWeeklyTime, cycleWeeklyTime, getWeeklyAgendaChanges, getWeeklyTime, type WeeklyAgendaRow } from "./weekly-agenda";
+import { clearWeeklyTime, createEmptyWeeklyAgenda, cycleWeeklyTime, getWeeklyAgendaChanges, getWeeklyTime, type WeeklyAgendaRow } from "./weekly-agenda";
 
 const weeklyAgendaFixture: WeeklyAgendaRow[] = [
   { mealType: "BREAKFAST", meal: "Desjejum", values: ["—", "08:00", "—", "08:10", "—"] },
@@ -10,6 +10,10 @@ const weeklyAgendaFixture: WeeklyAgendaRow[] = [
 import { defaultMealWindows } from "@/features/groups/model/meal-windows";
 
 describe("weekly agenda interactions", () => {
+  test("creates an empty agenda with the configured number of days", () => {
+    expect(createEmptyWeeklyAgenda(7).every((row) => row.values.length === 7)).toBe(true);
+  });
+
   test("cycles a meal using only its group window", () => {
     const updated = cycleWeeklyTime(weeklyAgendaFixture, "BREAKFAST", 0, defaultMealWindows);
     expect(getWeeklyTime(updated, "BREAKFAST", 0)).toBe("06:30");
