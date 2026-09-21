@@ -19,6 +19,7 @@ const messagePatterns: Array<[RegExp, string]> = [
   [/network|failed to fetch/i, "Não foi possível conectar ao servidor. Verifique sua internet e tente novamente."],
   [/rate limit|too many requests/i, "Muitas tentativas em pouco tempo. Aguarde um momento e tente novamente."],
   [/transfer or delete owned groups first/i, "Transfira ou exclua os grupos que você possui antes de excluir a conta."],
+  [/recent authentication required/i, "Confirme sua senha novamente para realizar esta ação."],
 ];
 
 export function getErrorMessage(error: unknown, fallback = "Não foi possível concluir a ação. Tente novamente.") {

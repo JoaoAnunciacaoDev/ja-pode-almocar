@@ -6,7 +6,7 @@ export type GroupSummary = {
   slug: string;
   name: string;
   institution: string;
-  ownerId: string;
+  isOwner: boolean;
   timezone: string;
   includeSaturday: boolean;
   includeSunday: boolean;
@@ -20,20 +20,27 @@ export type GroupMemberView = {
 };
 
 export type GroupDetails = GroupSummary & { members: GroupMemberView[] };
-export type GroupInvitePreview = { groupId: string; groupName: string; institution: string; memberCount: number };
+export type GroupInvitePreview = { groupName: string };
 
 export async function fetchGroups(): Promise<GroupSummary[]> {
-  const { data, error } = await requireSupabaseClient()
+  const client = requireSupabaseClient();
+  const { data: userData, error: userError } = await client.auth.getUser();
+  if (userError || !userData.user) throw userError ?? new Error("Authentication required");
+  const [{ data, error }, { data: memberships, error: membershipError }] = await Promise.all([
+    client
     .from("groups")
-    .select("id,slug,name,institution,owner_id,timezone,include_saturday,include_sunday,group_members(count)")
-    .order("created_at");
-  if (error) throw error;
+    .select("id,slug,name,institution,timezone,include_saturday,include_sunday,group_members(count)")
+    .order("created_at"),
+    client.from("group_members").select("group_id,role").eq("user_id", userData.user.id),
+  ]);
+  if (error || membershipError) throw error ?? membershipError;
+  const roles = new Map((memberships ?? []).map((membership) => [membership.group_id, membership.role]));
   return (data ?? []).map((group) => ({
     id: group.id,
     slug: group.slug,
     name: group.name,
     institution: group.institution,
-    ownerId: group.owner_id,
+    isOwner: roles.get(group.id) === "OWNER",
     timezone: group.timezone,
     includeSaturday: group.include_saturday,
     includeSunday: group.include_sunday,
@@ -60,29 +67,24 @@ async function fetchGroupLocator(groupId: string) {
 
 async function fetchGroupBy(column: "id" | "slug", value: string): Promise<GroupDetails> {
   const client = requireSupabaseClient();
-  const { data: group, error: groupError } = await client.from("groups").select("id,slug,name,institution,owner_id,timezone,include_saturday,include_sunday").eq(column, value).single();
+  const { data: userData, error: userError } = await client.auth.getUser();
+  if (userError || !userData.user) throw userError ?? new Error("Authentication required");
+  const { data: group, error: groupError } = await client.from("groups").select("id,slug,name,institution,timezone,include_saturday,include_sunday").eq(column, value).single();
   if (groupError) throw groupError;
-  const { data: memberships, error: membershipError } = await client.from("group_members").select("user_id,role").eq("group_id", group.id).order("joined_at");
-  if (membershipError) throw membershipError;
-
-  const ids = (memberships ?? []).map((membership) => membership.user_id);
-  const { data: profiles, error: profilesError } = ids.length
-    ? await client.from("profiles").select("id,name").in("id", ids)
-    : { data: [], error: null };
-  if (profilesError) throw profilesError;
-
-  const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
-  const members = (memberships ?? []).map((membership) => {
-    const profile = profileById.get(membership.user_id);
-    return { id: membership.user_id, name: profile?.name ?? "Integrante", role: membership.role as "OWNER" | "MEMBER" };
-  });
+  const { data: memberProfiles, error: memberProfilesError } = await client.rpc("get_group_member_profiles", { target_group_id: group.id });
+  if (memberProfilesError) throw memberProfilesError;
+  const members: GroupMemberView[] = (memberProfiles ?? []).map((member: { id: string; name: string; role: "OWNER" | "MEMBER" }) => ({
+    id: member.id,
+    name: member.name,
+    role: member.role,
+  }));
 
   return {
     id: group.id,
     slug: group.slug,
     name: group.name,
     institution: group.institution,
-    ownerId: group.owner_id,
+    isOwner: members.some((member) => member.id === userData.user.id && member.role === "OWNER"),
     timezone: group.timezone,
     includeSaturday: group.include_saturday,
     includeSunday: group.include_sunday,
@@ -151,7 +153,7 @@ export async function fetchInvitePreview(code: string): Promise<GroupInvitePrevi
   const { data, error } = await requireSupabaseClient().rpc("get_group_invite", { invite_code: code });
   if (error) throw error;
   const preview = data?.[0];
-  return preview ? { groupId: preview.group_id, groupName: preview.group_name, institution: preview.institution, memberCount: Number(preview.member_count) } : null;
+  return preview ? { groupName: preview.group_name } : null;
 }
 
 export async function acceptInvite(code: string) {

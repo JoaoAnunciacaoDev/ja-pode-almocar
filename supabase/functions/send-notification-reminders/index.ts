@@ -50,6 +50,21 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
+async function tokensMatch(supplied: string, expected: string) {
+  const encoder = new TextEncoder();
+  const [suppliedDigest, expectedDigest] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(supplied)),
+    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
+  ]);
+  const left = new Uint8Array(suppliedDigest);
+  const right = new Uint8Array(expectedDigest);
+  let difference = left.length ^ right.length;
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    difference |= (left[index] ?? 0) ^ (right[index] ?? 0);
+  }
+  return difference === 0;
+}
+
 function weekdayForDate(date: string) {
   return new Date(`${date}T12:00:00Z`).getUTCDay();
 }
@@ -174,7 +189,7 @@ Deno.serve(async (request) => {
     .eq("singleton", true)
     .single();
 
-  if (configError || !suppliedToken || suppliedToken !== config?.cron_token) {
+  if (configError || !suppliedToken || !config?.cron_token || !(await tokensMatch(suppliedToken, config.cron_token))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

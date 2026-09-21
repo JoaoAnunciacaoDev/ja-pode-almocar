@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroupBySlug, updateGroup } from "@/features/groups/api/groups-api";
 import { fetchMealWindows, saveMealWindows } from "@/features/groups/api/meal-windows-api";
 import { defaultMealWindows, type MealWindow } from "@/features/groups/model/meal-windows";
@@ -12,7 +11,6 @@ import { inputClassName } from "@/shared/components/form-styles";
 import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 
 export function GroupSettingsPage({ groupSlug }: { groupSlug: string }) {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
@@ -49,7 +47,7 @@ export function GroupSettingsPage({ groupSlug }: { groupSlug: string }) {
 
   if (groupQuery.isLoading || windowsQuery.isLoading) return <AppShell groupSlug={groupSlug}><div className="mx-auto max-w-3xl px-5 py-16 text-center text-sm text-black/45">Carregando configurações…</div></AppShell>;
   if (!group || groupQuery.error) return <AppShell><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Grupo não encontrado</h1><Link to="/grupos" className="mt-6 inline-block font-bold text-[var(--tomato)]">Ver meus grupos</Link></div></AppShell>;
-  if (group.ownerId !== user?.id) return <AppShell groupSlug={group.slug}><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Apenas o proprietário pode configurar</h1><Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="mt-6 inline-block font-bold text-[var(--tomato)]">Voltar para a agenda</Link></div></AppShell>;
+  if (!group.isOwner) return <AppShell groupSlug={group.slug}><div className="mx-auto max-w-3xl px-5 py-16 text-center"><h1 className="font-serif text-3xl font-bold">Apenas o proprietário pode configurar</h1><Link to="/g/$groupSlug/hoje" params={{ groupSlug: group.slug }} className="mt-6 inline-block font-bold text-[var(--tomato)]">Voltar para a agenda</Link></div></AppShell>;
 
   return (
     <AppShell groupSlug={group.slug}>

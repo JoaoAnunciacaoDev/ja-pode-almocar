@@ -1,4 +1,6 @@
 project_id = "hglslwjkyjkgfvnflanl"
 
 [functions.send-notification-reminders]
+# Called by pg_cron/pg_net with a rotated 256-bit x-cron-token. JWT verification
+# cannot be enabled for this machine-to-machine endpoint.
 verify_jwt = false

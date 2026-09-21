@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { Check, Search } from "lucide-react";
 import { useState } from "react";
 
-import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchActiveGroupInvite, fetchGroupBySlug } from "@/features/groups/api/groups-api";
 import { GroupInvitePanel } from "@/features/groups/components/group-invite-panel";
 import { GroupMembersPanel } from "@/features/groups/components/group-members-panel";
@@ -11,12 +10,11 @@ import { AppShell } from "@/shared/components/app-shell";
 import { useGroupRealtime } from "@/shared/hooks/use-group-realtime";
 
 export function GroupDetailPage({ groupSlug }: { groupSlug: string }) {
-  const { user } = useAuth();
   const [feedback, setFeedback] = useState<string | null>(null);
   const groupQuery = useQuery({ queryKey: ["groups", "slug", groupSlug], queryFn: () => fetchGroupBySlug(groupSlug) });
   const group = groupQuery.data;
   useGroupRealtime(group?.id);
-  const isOwner = group?.ownerId === user?.id;
+  const isOwner = group?.isOwner ?? false;
   const inviteQuery = useQuery({
     queryKey: ["groups", group?.id, "invite"],
     queryFn: () => fetchActiveGroupInvite(group!.id),
@@ -40,7 +38,7 @@ export function GroupDetailPage({ groupSlug }: { groupSlug: string }) {
         {feedback && <button type="button" onClick={() => setFeedback(null)} className="mt-6 flex w-full items-center justify-between rounded-2xl bg-[var(--sage)] px-4 py-3 text-left text-sm font-semibold text-white"><span className="flex items-center gap-2"><Check aria-hidden="true" className="size-4" />{feedback}</span><span>×</span></button>}
 
         <div className={`mt-8 grid min-w-0 gap-6 ${isOwner ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]" : ""}`}>
-          <GroupMembersPanel group={group} currentUserId={user!.id} onFeedback={setFeedback} />
+          <GroupMembersPanel group={group} onFeedback={setFeedback} />
           {isOwner && <GroupInvitePanel groupId={group.id} groupName={group.name} inviteCode={inviteQuery.data} loading={inviteQuery.isLoading} error={inviteQuery.error} onFeedback={setFeedback} />}
         </div>
       </div>

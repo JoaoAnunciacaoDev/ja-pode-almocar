@@ -45,8 +45,30 @@ describe.skipIf(!enabled)("Supabase RLS with owner, member and outsider", () => 
 
     const invite = await clients.owner.rpc("regenerate_group_invite", { target_group_id: groupId });
     expect(invite.error).toBeNull();
+    expect(invite.data).toMatch(/^[A-F0-9]{32}$/);
+
+    const anonymous = createClient(url!, anonKey!, { auth: { persistSession: false } });
+    const anonymousPreview = await anonymous.rpc("get_group_invite", { invite_code: invite.data });
+    expect(anonymousPreview.data ?? []).toHaveLength(0);
+
     const accepted = await clients.member.rpc("accept_group_invite", { invite_code: invite.data });
     expect(accepted.error).toBeNull();
+
+    const peerProfile = await clients.member.from("profiles").select("id,email").eq("id", userIds[0]);
+    expect(peerProfile.error).toBeNull();
+    expect(peerProfile.data).toHaveLength(0);
+    const memberDirectory = await clients.member.rpc("get_group_member_profiles", { target_group_id: groupId });
+    expect(memberDirectory.error).toBeNull();
+    expect(memberDirectory.data).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: userIds[0], name: "owner", role: "OWNER" }),
+      expect.objectContaining({ id: userIds[1], name: "member", role: "MEMBER" }),
+    ]));
+    const outsiderDirectory = await clients.outsider.rpc("get_group_member_profiles", { target_group_id: groupId });
+    expect(outsiderDirectory.error).not.toBeNull();
+
+    const authenticatedPreview = await clients.member.rpc("get_group_invite", { invite_code: invite.data });
+    expect(authenticatedPreview.error).toBeNull();
+    expect(authenticatedPreview.data).toEqual([{ group_name: "RLS test" }]);
 
     const memberRead = await clients.member.from("groups").select("id").eq("id", groupId);
     expect(memberRead.data).toHaveLength(1);
@@ -64,6 +86,9 @@ describe.skipIf(!enabled)("Supabase RLS with owner, member and outsider", () => 
     expect(deliveryAudit.error).not.toBeNull();
     const dispatchConfig = await clients.owner.from("notification_dispatch_config").select("cron_token");
     expect(dispatchConfig.error).not.toBeNull();
+    const serviceDispatchConfig = await admin.from("notification_dispatch_config").select("cron_token").single();
+    expect(serviceDispatchConfig.error).toBeNull();
+    expect(serviceDispatchConfig.data?.cron_token).toMatch(/^[a-f0-9]{64}$/);
 
     const memberUpdate = await clients.member.from("groups").update({ name: "Not allowed" }).eq("id", groupId).select();
     expect(memberUpdate.data).toHaveLength(0);

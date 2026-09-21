@@ -12,10 +12,10 @@ function initials(name: string) {
   return name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
-export function GroupMembersPanel({ group, currentUserId, onFeedback }: { group: GroupDetails; currentUserId: string; onFeedback: (message: string) => void }) {
+export function GroupMembersPanel({ group, onFeedback }: { group: GroupDetails; onFeedback: (message: string) => void }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const isOwner = group.ownerId === currentUserId;
+  const isOwner = group.isOwner;
   const members = group.members.filter((member) => member.role === "MEMBER");
   const [newOwnerId, setNewOwnerId] = useState(members[0]?.id ?? "");
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);

@@ -2,12 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Hand, Users } from "lucide-react";
 
-import { useAuth } from "@/features/auth/hooks/use-auth";
 import { fetchGroups } from "@/features/groups/api/groups-api";
 import { AppShell } from "@/shared/components/app-shell";
 
 export function GroupsPage() {
-  const { user } = useAuth();
   const groupsQuery = useQuery({ queryKey: ["groups"], queryFn: fetchGroups });
   const groups = groupsQuery.data ?? [];
 
@@ -27,7 +25,7 @@ export function GroupsPage() {
               <Link key={group.id} to="/g/$groupSlug" params={{ groupSlug: group.slug }} className="group rounded-[28px] border border-black/8 bg-white p-6 shadow-[0_18px_60px_rgba(42,35,28,.07)] transition hover:-translate-y-1 hover:border-[var(--tomato)]/30">
                 <div className="flex items-start justify-between"><span className="grid size-12 place-items-center rounded-2xl bg-[var(--blush)] text-[var(--tomato-dark)]"><Users aria-hidden="true" className="size-6" /></span><ArrowRight aria-hidden="true" className="size-5 text-black/25 transition group-hover:translate-x-1 group-hover:text-[var(--tomato)]" /></div>
                 <h2 className="mt-6 text-xl font-extrabold">{group.name}</h2><p className="mt-2 line-clamp-1 text-sm text-black/45">{group.institution || "Instituição não informada"}</p>
-                <div className="mt-6 flex items-center justify-between border-t border-black/7 pt-4"><span className="text-xs font-bold text-black/45">{group.memberCount} {group.memberCount === 1 ? "integrante" : "integrantes"}</span>{group.ownerId === user?.id && <span className="rounded-full bg-[var(--lemon)] px-2.5 py-1 text-[10px] font-extrabold uppercase">Proprietário</span>}</div>
+                <div className="mt-6 flex items-center justify-between border-t border-black/7 pt-4"><span className="text-xs font-bold text-black/45">{group.memberCount} {group.memberCount === 1 ? "integrante" : "integrantes"}</span>{group.isOwner && <span className="rounded-full bg-[var(--lemon)] px-2.5 py-1 text-[10px] font-extrabold uppercase">Proprietário</span>}</div>
               </Link>
             ))}
           </div>
