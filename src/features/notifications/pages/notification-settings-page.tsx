@@ -70,10 +70,17 @@ export function NotificationSettingsPage() {
     setOverride({ ...preferences, [key]: !preferences[key] });
   }
 
-  function toggleEmail() {
+  async function toggleEmail() {
     saveMutation.reset();
     setPushStatusMessage(null);
-    setOverride({ ...preferences, emailEnabled: !preferences.emailEnabled });
+    const updated = { ...preferences, emailEnabled: !preferences.emailEnabled };
+    setOverride(updated);
+    try {
+      await saveNotificationPreferences(user!.id, updated);
+      await queryClient.invalidateQueries({ queryKey: ["notification-preferences", user?.id] });
+    } catch (error) {
+      console.error("Falha ao atualizar preferência de e-mail:", error);
+    }
   }
 
   async function handleTogglePush() {
@@ -103,7 +110,10 @@ export function NotificationSettingsPage() {
         await savePushSubscription(user!.id, subscription.toJSON());
         setDeviceSubscribed(true);
         setPushStatusMessage("Este dispositivo foi registrado para receber notificações push.");
-        setOverride({ ...preferences, pushEnabled: true });
+        const updated = { ...preferences, pushEnabled: true };
+        setOverride(updated);
+        await saveNotificationPreferences(user!.id, updated);
+        await queryClient.invalidateQueries({ queryKey: ["notification-preferences", user?.id] });
       } else {
         const sub = await getCurrentPushSubscription();
         if (sub) {
@@ -112,7 +122,10 @@ export function NotificationSettingsPage() {
         }
         setDeviceSubscribed(false);
         setPushStatusMessage("Notificações push desativadas neste dispositivo.");
-        setOverride({ ...preferences, pushEnabled: false });
+        const updated = { ...preferences, pushEnabled: false };
+        setOverride(updated);
+        await saveNotificationPreferences(user!.id, updated);
+        await queryClient.invalidateQueries({ queryKey: ["notification-preferences", user?.id] });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha ao configurar notificações push.";
