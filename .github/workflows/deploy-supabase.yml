@@ -47,14 +47,12 @@ jobs:
         run: |
           supabase functions deploy send-notification-reminders --project-ref "$SUPABASE_PROJECT_ID"
 
-      - name: Push Database Migrations (Optional)
+      - name: Push Database Migrations
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          if [ -n "$SUPABASE_DB_PASSWORD" ]; then
-            supabase db push --project-ref "$SUPABASE_PROJECT_ID"
+          if [ -n "$SUPABASE_DB_URL" ]; then
+            supabase db push --db-url "$SUPABASE_DB_URL"
           else
-            echo "SUPABASE_DB_PASSWORD não configurada. Pulando migrations do banco."
+            echo "SUPABASE_DB_URL não configurada. Pulando migrations do banco."
           fi
