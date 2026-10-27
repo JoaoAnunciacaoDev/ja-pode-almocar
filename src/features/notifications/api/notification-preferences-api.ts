@@ -1,6 +1,8 @@
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 export type NotificationPreferences = {
+  emailEnabled: boolean;
+  pushEnabled: boolean;
   weeklyReviewEnabled: boolean;
   dailyBreakfastSummaryEnabled: boolean;
   dailyLunchSummaryEnabled: boolean;
@@ -9,6 +11,8 @@ export type NotificationPreferences = {
 };
 
 export const defaultNotificationPreferences: NotificationPreferences = {
+  emailEnabled: true,
+  pushEnabled: false,
   weeklyReviewEnabled: true,
   dailyBreakfastSummaryEnabled: false,
   dailyLunchSummaryEnabled: true,
@@ -19,12 +23,14 @@ export const defaultNotificationPreferences: NotificationPreferences = {
 export async function fetchNotificationPreferences(userId: string): Promise<NotificationPreferences> {
   const { data, error } = await requireSupabaseClient()
     .from("notification_preferences")
-    .select("weekly_review_enabled,daily_breakfast_summary_enabled,daily_lunch_summary_enabled,participation_reminder_enabled,dinner_summary_enabled")
+    .select("email_enabled,push_enabled,weekly_review_enabled,daily_breakfast_summary_enabled,daily_lunch_summary_enabled,participation_reminder_enabled,dinner_summary_enabled")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
   if (!data) return defaultNotificationPreferences;
   return {
+    emailEnabled: data.email_enabled ?? true,
+    pushEnabled: data.push_enabled ?? false,
     weeklyReviewEnabled: data.weekly_review_enabled,
     dailyBreakfastSummaryEnabled: data.daily_breakfast_summary_enabled,
     dailyLunchSummaryEnabled: data.daily_lunch_summary_enabled,
@@ -36,6 +42,8 @@ export async function fetchNotificationPreferences(userId: string): Promise<Noti
 export async function saveNotificationPreferences(userId: string, preferences: NotificationPreferences) {
   const { error } = await requireSupabaseClient().from("notification_preferences").upsert({
     user_id: userId,
+    email_enabled: preferences.emailEnabled,
+    push_enabled: preferences.pushEnabled,
     weekly_review_enabled: preferences.weeklyReviewEnabled,
     daily_breakfast_summary_enabled: preferences.dailyBreakfastSummaryEnabled,
     daily_lunch_summary_enabled: preferences.dailyLunchSummaryEnabled,
