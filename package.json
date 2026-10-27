@@ -11,7 +11,8 @@
     "typecheck:functions": "tsc --noEmit -p supabase/functions/tsconfig.json",
     "lint": "eslint .",
     "test": "bun test",
-    "test:rls": "bun test tests/rls.e2e.test.ts"
+    "test:rls": "bun test tests/rls.e2e.test.ts",
+    "generate:vapid": "bun scripts/generate-vapid-keys.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

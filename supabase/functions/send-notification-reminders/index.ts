@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { sendNotification, type VapidDetails } from "web-push-neo";
 import {
   buildNotificationEmail,
   parseSender,
@@ -18,6 +19,8 @@ type Delivery = {
   group_name: string;
   group_slug: string;
   group_timezone: string;
+  email_enabled?: boolean;
+  push_enabled?: boolean;
 };
 
 type MealEntryRow = {
@@ -157,6 +160,87 @@ async function sendWithBrevo(delivery: Delivery) {
   return responseBody.messageId ?? null;
 }
 
+function buildPushPayload(delivery: Delivery) {
+  const todayUrl = `/g/${encodeURIComponent(delivery.group_slug)}/hoje`;
+  const agendaUrl = `/g/${encodeURIComponent(delivery.group_slug)}/agenda`;
+
+  if (delivery.notification_type === "WEEKLY_REVIEW") {
+    return {
+      title: "Já pode almoçar? 🗓️",
+      body: `Revise sua semana em ${delivery.group_name} e combine seus horários.`,
+      url: agendaUrl,
+      tag: "weekly-review",
+    };
+  }
+
+  if (delivery.notification_type === "PARTICIPATION_REMINDER") {
+    return {
+      title: "Já pode almoçar? 🍽️",
+      body: `Confirme se o seu almoço de hoje em ${delivery.group_name} continua valendo.`,
+      url: todayUrl,
+      tag: "participation-reminder",
+    };
+  }
+
+  const mealName = delivery.notification_type === "DAILY_BREAKFAST_SUMMARY"
+    ? "desjejum"
+    : delivery.notification_type === "DINNER_SUMMARY"
+    ? "jantar"
+    : "almoço";
+
+  return {
+    title: `Resumo do ${mealName} · ${delivery.group_name}`,
+    body: `Confira quem estará disponível para o ${mealName} hoje.`,
+    url: todayUrl,
+    tag: delivery.notification_type.toLowerCase(),
+  };
+}
+
+async function sendPushNotifications(delivery: Delivery) {
+  const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+  const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+  const vapidSubject = Deno.env.get("VAPID_SUBJECT") || "mailto:contato@example.com";
+
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    return;
+  }
+
+  const { data: subscriptions, error } = await supabase
+    .from("push_subscriptions")
+    .select("id,endpoint,p256dh,auth")
+    .eq("user_id", delivery.user_id);
+
+  if (error || !subscriptions?.length) return;
+
+  const pushPayload = JSON.stringify(buildPushPayload(delivery));
+  const vapidDetails: VapidDetails = {
+    subject: vapidSubject,
+    publicKey: vapidPublicKey,
+    privateKey: vapidPrivateKey,
+  };
+
+  await Promise.all(
+    subscriptions.map(async (sub) => {
+      try {
+        const response = await sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          pushPayload,
+          { vapidDetails, TTL: 3600 },
+        );
+
+        if (response.status === 404 || response.status === 410) {
+          await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+        }
+      } catch (pushError) {
+        console.error("Push delivery failed for subscription", sub.id, pushError);
+      }
+    }),
+  );
+}
+
 async function markSent(delivery: Delivery, providerMessageId: string | null) {
   const { error } = await supabase.from("notification_deliveries").update({
     status: "SENT",
@@ -205,7 +289,16 @@ Deno.serve(async (request) => {
 
   for (const delivery of deliveries) {
     try {
-      const providerMessageId = await sendWithBrevo(delivery);
+      let providerMessageId: string | null = null;
+
+      if (delivery.email_enabled ?? true) {
+        providerMessageId = await sendWithBrevo(delivery);
+      }
+
+      if (delivery.push_enabled) {
+        await sendPushNotifications(delivery);
+      }
+
       await markSent(delivery, providerMessageId);
       sent += 1;
     } catch (deliveryError) {

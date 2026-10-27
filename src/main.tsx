@@ -4,6 +4,11 @@ import { RouterProvider } from "@tanstack/react-router";
 
 import { router } from "@/app/routes/router";
 import "@/app/styles.css";
+import { registerServiceWorker } from "@/features/notifications/utils/push-manager";
+
+if (typeof window !== "undefined") {
+  registerServiceWorker();
+}
 
 const rootElement = document.getElementById("root");
 
