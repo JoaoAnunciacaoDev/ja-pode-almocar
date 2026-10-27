@@ -74,7 +74,11 @@ begin
 end;
 $$;
 
--- 4. Update claim_due_non_breakfast_deliveries
+revoke all on function public.enqueue_due_breakfast_notifications(timestamptz) from public;
+grant execute on function public.enqueue_due_breakfast_notifications(timestamptz) to service_role;
+
+-- 4. Drop dependent functions in order to update return signatures
+drop function if exists public.claim_due_notification_deliveries(timestamptz, integer);
 drop function if exists public.claim_due_non_breakfast_deliveries(timestamptz, integer);
 
 create or replace function public.claim_due_non_breakfast_deliveries(
@@ -229,8 +233,39 @@ begin
 end;
 $$;
 
-revoke all on function public.enqueue_due_breakfast_notifications(timestamptz) from public;
-grant execute on function public.enqueue_due_breakfast_notifications(timestamptz) to service_role;
+create function public.claim_due_notification_deliveries(
+  run_at timestamptz default now(),
+  batch_size integer default 50
+)
+returns table (
+  id uuid,
+  user_id uuid,
+  group_id uuid,
+  notification_type public.notification_type,
+  local_date date,
+  attempt_count smallint,
+  recipient_name text,
+  recipient_email text,
+  group_name text,
+  group_slug text,
+  group_timezone text,
+  email_enabled boolean,
+  push_enabled boolean
+)
+language sql
+security definer
+set search_path = ''
+as $$
+  with breakfast as materialized (
+    select public.enqueue_due_breakfast_notifications(run_at)
+  )
+  select claimed.*
+  from breakfast
+  cross join lateral public.claim_due_non_breakfast_deliveries(run_at, batch_size) claimed;
+$$;
 
 revoke all on function public.claim_due_non_breakfast_deliveries(timestamptz, integer) from public;
 grant execute on function public.claim_due_non_breakfast_deliveries(timestamptz, integer) to service_role;
+
+revoke all on function public.claim_due_notification_deliveries(timestamptz, integer) from public;
+grant execute on function public.claim_due_notification_deliveries(timestamptz, integer) to service_role;
