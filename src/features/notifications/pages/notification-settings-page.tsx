@@ -22,6 +22,7 @@ import {
   unsubscribeFromPush,
 } from "@/features/notifications/utils/push-manager";
 import { AppShell } from "@/shared/components/app-shell";
+import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 const mealOptions: Array<{ key: keyof NotificationPreferences; title: string; description: string }> = [
   { key: "weeklyReviewEnabled", title: "Revisão semanal", description: "Domingos, às 17h30: confira os horários da próxima semana." },
@@ -44,6 +45,8 @@ export function NotificationSettingsPage() {
   const [pushStatusMessage, setPushStatusMessage] = useState<string | null>(null);
   const [isPushLoading, setIsPushLoading] = useState(false);
   const [deviceSubscribed, setDeviceSubscribed] = useState<boolean | null>(null);
+  const [isTestingPush, setIsTestingPush] = useState(false);
+  const [testPushFeedback, setTestPushFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const preferences = override ?? preferencesQuery.data ?? defaultNotificationPreferences;
   const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? "";
@@ -55,6 +58,37 @@ export function NotificationSettingsPage() {
       setDeviceSubscribed(Boolean(sub));
     });
   }, [pushSupported]);
+
+  async function handleSendTestPush() {
+    setIsTestingPush(true);
+    setTestPushFeedback(null);
+    try {
+      const supabase = requireSupabaseClient();
+      const { data, error } = await supabase.functions.invoke("send-notification-reminders", {
+        body: { action: "test_push" },
+      });
+      if (error) throw error;
+      if (data?.results?.some((r: { success?: boolean }) => r.success)) {
+        setTestPushFeedback({
+          type: "success",
+          message: "Notificação de teste enviada! Ela deve aparecer no seu dispositivo agora.",
+        });
+      } else {
+        const firstError = data?.results?.[0]?.error || data?.message || "Nenhum dispositivo cadastrado.";
+        setTestPushFeedback({
+          type: "error",
+          message: `Não foi possível entregar o push: ${firstError}`,
+        });
+      }
+    } catch (err) {
+      setTestPushFeedback({
+        type: "error",
+        message: err instanceof Error ? err.message : "Erro ao enviar notificação de teste.",
+      });
+    } finally {
+      setIsTestingPush(false);
+    }
+  }
 
   const saveMutation = useMutation({
     mutationFn: (newPreferences: NotificationPreferences) => saveNotificationPreferences(user!.id, newPreferences),
@@ -209,7 +243,41 @@ export function NotificationSettingsPage() {
                 className="size-5 shrink-0 accent-[var(--tomato)] disabled:opacity-40"
               />
             </label>
+
+            {preferences.pushEnabled && (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-black/7 bg-black/[0.02] p-4 sm:px-6">
+                <p className="text-xs text-black/55">
+                  Deseja testar se as notificações estão chegando no seu celular?
+                </p>
+                <button
+                  type="button"
+                  disabled={isTestingPush}
+                  onClick={handleSendTestPush}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-bold text-black/80 transition hover:bg-black/5 disabled:opacity-50"
+                >
+                  <Bell className="size-3.5 text-[var(--tomato)]" />
+                  {isTestingPush ? "Enviando teste…" : "Enviar notificação de teste"}
+                </button>
+              </div>
+            )}
           </div>
+
+          {testPushFeedback && (
+            <p
+              className={`mt-3 flex items-center gap-2 rounded-2xl p-3 text-xs font-semibold ${
+                testPushFeedback.type === "success"
+                  ? "bg-emerald-50 text-emerald-800"
+                  : "bg-red-50 text-red-700"
+              }`}
+            >
+              {testPushFeedback.type === "success" ? (
+                <Check className="size-4 shrink-0 text-emerald-600" />
+              ) : (
+                <AlertCircle className="size-4 shrink-0 text-red-500" />
+              )}
+              {testPushFeedback.message}
+            </p>
+          )}
 
           {pushStatusMessage && (
             <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-black/70">

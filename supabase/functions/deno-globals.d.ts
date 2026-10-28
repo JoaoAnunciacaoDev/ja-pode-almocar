@@ -24,9 +24,15 @@ declare module "web-push-neo" {
     urgency?: "very-low" | "low" | "normal" | "high";
     headers?: Record<string, string>;
   }
+  export interface SendResult {
+    statusCode?: number;
+    status?: number;
+    headers?: Headers | Record<string, string>;
+    body?: string;
+  }
   export function sendNotification(
     subscription: PushSubscription,
     payload?: string | null,
     options?: SendNotificationOptions,
-  ): Promise<Response>;
+  ): Promise<Response & SendResult>;
 }

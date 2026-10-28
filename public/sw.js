@@ -24,8 +24,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Já pode almoçar?";
   const options = {
     body: payload.body || "Você tem uma nova notificação do seu grupo.",
-    icon: payload.icon || "/favicon.svg",
-    badge: payload.badge || "/favicon.svg",
+    icon: payload.icon || "/icon-192.png",
+    badge: payload.badge || "/icon-192.png",
     data: {
       url: payload.url || "/",
     },
@@ -33,7 +33,16 @@ self.addEventListener("push", (event) => {
     renotify: true,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options).catch((err) => {
+      console.warn("Falha ao exibir notificação com opções padrão, tentando fallback simplificado:", err);
+      return self.registration.showNotification(title, {
+        body: options.body,
+        data: options.data,
+        tag: options.tag,
+      });
+    }),
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {

@@ -196,30 +196,44 @@ function buildPushPayload(delivery: Delivery) {
   };
 }
 
-async function sendPushNotifications(delivery: Delivery) {
+async function sendPushToSubscriptions(
+  userId: string,
+  payload: { title: string; body: string; url: string; tag?: string },
+) {
   const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
   const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-  const vapidSubject = Deno.env.get("VAPID_SUBJECT") || "mailto:contato@example.com";
+  let vapidSubject = Deno.env.get("VAPID_SUBJECT") || "mailto:contato@example.com";
+  if (vapidSubject && !vapidSubject.startsWith("mailto:") && !vapidSubject.startsWith("https://") && !vapidSubject.startsWith("http://")) {
+    vapidSubject = `mailto:${vapidSubject}`;
+  }
 
   if (!vapidPublicKey || !vapidPrivateKey) {
-    return;
+    console.error("VAPID keys missing in environment variables!");
+    return { error: "Chaves VAPID não configuradas no servidor." };
   }
 
   const { data: subscriptions, error } = await supabase
     .from("push_subscriptions")
-    .select("id,endpoint,p256dh,auth")
-    .eq("user_id", delivery.user_id);
+    .select("id,endpoint,p256dh,auth,user_agent")
+    .eq("user_id", userId);
 
-  if (error || !subscriptions?.length) return;
+  if (error) {
+    console.error("Error fetching push subscriptions", error);
+    return { error: error.message };
+  }
 
-  const pushPayload = JSON.stringify(buildPushPayload(delivery));
+  if (!subscriptions?.length) {
+    return { count: 0, message: "Nenhum dispositivo cadastrado para este usuário." };
+  }
+
+  const pushPayload = JSON.stringify(payload);
   const vapidDetails: VapidDetails = {
     subject: vapidSubject,
     publicKey: vapidPublicKey,
     privateKey: vapidPrivateKey,
   };
 
-  await Promise.all(
+  const results = await Promise.all(
     subscriptions.map(async (sub) => {
       try {
         const response = await sendNotification(
@@ -228,17 +242,40 @@ async function sendPushNotifications(delivery: Delivery) {
             keys: { p256dh: sub.p256dh, auth: sub.auth },
           },
           pushPayload,
-          { vapidDetails, TTL: 3600 },
+          { vapidDetails, TTL: 3600, urgency: "high" },
         );
 
-        if (response.status === 404 || response.status === 410) {
+        return {
+          id: sub.id,
+          endpoint: sub.endpoint.slice(0, 50) + "...",
+          status: response.statusCode,
+          success: true,
+        };
+      } catch (pushError: unknown) {
+        console.error("Push delivery failed for subscription", sub.id, pushError);
+        const err = pushError as { statusCode?: number; status?: number; message?: string; body?: string };
+        const statusCode = err?.statusCode ?? err?.status;
+        if (statusCode === 404 || statusCode === 410) {
           await supabase.from("push_subscriptions").delete().eq("id", sub.id);
         }
-      } catch (pushError) {
-        console.error("Push delivery failed for subscription", sub.id, pushError);
+        return {
+          id: sub.id,
+          endpoint: sub.endpoint.slice(0, 50) + "...",
+          statusCode,
+          error: err?.message ?? String(pushError),
+          body: err?.body,
+          success: false,
+        };
       }
     }),
   );
+
+  return { count: subscriptions.length, results };
+}
+
+async function sendPushNotifications(delivery: Delivery) {
+  const payload = buildPushPayload(delivery);
+  await sendPushToSubscriptions(delivery.user_id, payload);
 }
 
 async function markSent(delivery: Delivery, providerMessageId: string | null) {
@@ -263,24 +300,78 @@ async function markFailed(delivery: Delivery, error: unknown) {
   if (updateError) console.error("Could not record notification failure", delivery.id, updateError.message);
 }
 
-Deno.serve(async (request) => {
-  if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-token",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
-  const suppliedToken = request.headers.get("x-cron-token");
-  const { data: config, error: configError } = await supabase
+Deno.serve(async (request) => {
+  if (request.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+  }
+
+  let body: Record<string, unknown> = {};
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+
+  const suppliedCronToken = request.headers.get("x-cron-token");
+  const authHeader = request.headers.get("Authorization");
+  let callerUserId: string | null = null;
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const { data: userData } = await supabase.auth.getUser(token);
+    if (userData?.user) {
+      callerUserId = userData.user.id;
+    }
+  }
+
+  const { data: config } = await supabase
     .from("notification_dispatch_config")
     .select("cron_token")
     .eq("singleton", true)
     .single();
 
-  if (configError || !suppliedToken || !config?.cron_token || !(await tokensMatch(suppliedToken, config.cron_token))) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const isCronAuthorized = Boolean(
+    suppliedCronToken &&
+    config?.cron_token &&
+    (await tokensMatch(suppliedCronToken, config.cron_token))
+  );
+
+  // Endpoint para teste direto de push pelo frontend ou cron/admin
+  if (body.action === "test_push") {
+    const targetUserId = (isCronAuthorized && typeof body.user_id === "string" ? body.user_id : callerUserId);
+    if (!targetUserId) {
+      return Response.json({ error: "Não autorizado para enviar push de teste." }, { status: 401, headers: corsHeaders });
+    }
+
+    const testPayload = {
+      title: "Já pode almoçar? 🔔",
+      body: "Notificação de teste recebida com sucesso no seu dispositivo!",
+      url: "/",
+      tag: "test-push",
+    };
+
+    const pushResult = await sendPushToSubscriptions(targetUserId, testPayload);
+    return Response.json({ success: true, ...pushResult }, { headers: corsHeaders });
+  }
+
+  if (!isCronAuthorized) {
+    return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
   }
 
   const { data, error } = await supabase.rpc("claim_due_notification_deliveries", { batch_size: 50 });
   if (error) {
     console.error("Could not claim notification deliveries", error.message);
-    return Response.json({ error: "Could not claim notifications" }, { status: 500 });
+    return Response.json({ error: "Could not claim notifications" }, { status: 500, headers: corsHeaders });
   }
 
   const deliveries = (data ?? []) as Delivery[];
@@ -308,5 +399,5 @@ Deno.serve(async (request) => {
     }
   }
 
-  return Response.json({ claimed: deliveries.length, sent, failed });
+  return Response.json({ claimed: deliveries.length, sent, failed }, { headers: corsHeaders });
 });
