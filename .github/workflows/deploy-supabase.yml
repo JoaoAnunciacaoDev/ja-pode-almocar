@@ -52,7 +52,7 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           if [ -n "$SUPABASE_DB_URL" ]; then
-            supabase db push --db-url "$SUPABASE_DB_URL"
+            supabase db push --db-url "$SUPABASE_DB_URL" --yes
           else
             echo "SUPABASE_DB_URL não configurada. Pulando migrations do banco."
           fi
