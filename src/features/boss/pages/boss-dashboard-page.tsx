@@ -128,7 +128,7 @@ export function BossDashboardPage() {
             <Lock className="size-8" aria-hidden="true" />
           </div>
           <h1 className="mt-6 font-serif text-3xl font-extrabold text-[var(--ink)]">
-            Acesso Restrito ao Papel Boss
+            Acesso Restrito ao Boss
           </h1>
           <p className="mt-3 text-sm text-black/60 leading-relaxed">
             Este painel administrativo é reservado exclusivamente para perfis com permissão Boss.
@@ -156,7 +156,7 @@ export function BossDashboardPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-extrabold text-amber-800">
-                <Crown className="size-3.5" aria-hidden="true" /> Papel Boss
+                <Crown className="size-3.5" aria-hidden="true" /> Boss
               </span>
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-black/40">
                 Visão Geral do Sistema
