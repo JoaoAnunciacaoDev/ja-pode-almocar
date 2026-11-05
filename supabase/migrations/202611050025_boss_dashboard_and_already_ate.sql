@@ -1,6 +1,7 @@
--- 1. Add is_boss column to profiles table
+-- 1. Add is_boss and last_seen_at columns to profiles table
 alter table public.profiles
-add column if not exists is_boss boolean not null default false;
+add column if not exists is_boss boolean not null default false,
+add column if not exists last_seen_at timestamptz default now();
 
 -- 2. Update meal_entries participation mode constraint to accommodate ALREADY_ATE
 alter table public.meal_entries drop constraint if exists meal_entries_participation_mode;
@@ -81,12 +82,12 @@ begin
           p.email,
           p.created_at,
           p.is_boss,
-          u.last_sign_in_at,
+          coalesce(p.last_seen_at, u.last_sign_in_at, p.updated_at, p.created_at) as last_sign_in_at,
           count(gm.group_id)::int as groups_count
         from public.profiles p
         left join auth.users u on u.id = p.id
         left join public.group_members gm on gm.user_id = p.id
-        group by p.id, p.name, p.email, p.created_at, p.is_boss, u.last_sign_in_at
+        group by p.id, p.name, p.email, p.created_at, p.is_boss, p.last_seen_at, u.last_sign_in_at, p.updated_at
         order by p.created_at desc
       ) user_item
     )
@@ -99,7 +100,27 @@ $$;
 revoke all on function public.get_boss_dashboard_data() from public, anon;
 grant execute on function public.get_boss_dashboard_data() to authenticated;
 
--- 4. RPC to allow an active Boss to promote or demote other users to/from Boss
+-- 4. RPC to record user access when visiting the site
+create or replace function public.record_user_access()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is not null then
+    update public.profiles
+    set last_seen_at = now()
+    where id = auth.uid()
+      and (last_seen_at is null or last_seen_at < now() - interval '5 minutes');
+  end if;
+end;
+$$;
+
+revoke all on function public.record_user_access() from public, anon;
+grant execute on function public.record_user_access() to authenticated;
+
+-- 5. RPC to allow an active Boss to promote or demote other users to/from Boss
 create or replace function public.set_user_boss_status(target_user_id uuid, make_boss boolean)
 returns boolean
 language plpgsql
