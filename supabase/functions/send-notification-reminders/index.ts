@@ -457,6 +457,12 @@ Deno.serve(async (request) => {
     return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
   }
 
+  try {
+    await supabase.rpc("cleanup_old_notification_deliveries", { retention_days: 30 });
+  } catch (cleanupError) {
+    console.warn("Falha na rotina de limpeza de notificações antigas:", cleanupError);
+  }
+
   const { data, error } = await supabase.rpc("claim_due_notification_deliveries", { batch_size: 50 });
   if (error) {
     console.error("Could not claim notification deliveries", error.message);
