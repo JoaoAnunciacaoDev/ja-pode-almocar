@@ -2,20 +2,38 @@
 alter table public.profiles
 add column if not exists is_boss boolean not null default false;
 
--- 2. Add 'ALREADY_ATE' status to meal_status enum
-alter type public.meal_status add value if not exists 'ALREADY_ATE';
-
--- 3. Update meal_entries check constraint to accommodate ALREADY_ATE
+-- 2. Update meal_entries participation mode constraint to accommodate ALREADY_ATE
+alter table public.meal_entries drop constraint if exists meal_entries_participation_mode;
 alter table public.meal_entries drop constraint if exists meal_entries_time_matches_status;
-alter table public.meal_entries add constraint meal_entries_time_matches_status check (
-  (status = 'NOT_GOING' and time is null) or
-  (status in ('CONFIRMED', 'PLANNED', 'ALREADY_ATE'))
+
+alter table public.meal_entries add constraint meal_entries_participation_mode check (
+  (
+    waiting_for_user_id is null and
+    (
+      (status = 'NOT_GOING' and time is null and available_until is null) or
+      (
+        status in ('CONFIRMED', 'PLANNED') and
+        time is not null and
+        (available_until is null or available_until > time)
+      ) or
+      (
+        status = 'ALREADY_ATE' and
+        (available_until is null or (time is not null and available_until > time))
+      )
+    )
+  ) or (
+    waiting_for_user_id is not null and
+    waiting_for_user_id <> user_id and
+    status = 'PLANNED' and
+    time is null and
+    available_until is null
+  )
 );
 
 -- Note: To designate the initial Boss user, execute:
 -- update public.profiles set is_boss = true where email = 'admin@example.com';
 
--- 4. RPC to fetch all system dashboard data for Boss
+-- 3. RPC to fetch all system dashboard data for Boss
 create or replace function public.get_boss_dashboard_data()
 returns jsonb
 language plpgsql
@@ -81,7 +99,7 @@ $$;
 revoke all on function public.get_boss_dashboard_data() from public, anon;
 grant execute on function public.get_boss_dashboard_data() to authenticated;
 
--- 5. RPC to allow an active Boss to promote or demote other users to/from Boss
+-- 4. RPC to allow an active Boss to promote or demote other users to/from Boss
 create or replace function public.set_user_boss_status(target_user_id uuid, make_boss boolean)
 returns boolean
 language plpgsql
@@ -124,4 +142,3 @@ $$;
 
 revoke all on function public.set_user_boss_status(uuid, boolean) from public, anon;
 grant execute on function public.set_user_boss_status(uuid, boolean) to authenticated;
-
