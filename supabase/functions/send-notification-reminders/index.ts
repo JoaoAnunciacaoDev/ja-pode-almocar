@@ -27,7 +27,7 @@ type MealEntryRow = {
   user_id: string;
   time: string | null;
   available_until: string | null;
-  status: "CONFIRMED" | "PLANNED" | "NOT_GOING";
+  status: "CONFIRMED" | "PLANNED" | "NOT_GOING" | "ALREADY_ATE";
   waiting_for_user_id: string | null;
 };
 
@@ -120,7 +120,7 @@ async function loadMealPeople(delivery: Delivery): Promise<MealPerson[]> {
       name: names.get(userId) ?? "Integrante",
       time: trimTime(entry ? entry.time : routine!.time),
       availableUntil: trimTime(entry ? entry.available_until : routine!.available_until),
-      status: entry?.status === "CONFIRMED" ? "CONFIRMED" as const : "PLANNED" as const,
+      status: entry?.status === "CONFIRMED" || entry?.status === "ALREADY_ATE" ? "CONFIRMED" as const : "PLANNED" as const,
       waitingForName: entry?.waiting_for_user_id ? names.get(entry.waiting_for_user_id) ?? "outro integrante" : null,
     }];
   }).sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99") || a.name.localeCompare(b.name, "pt-BR"));
@@ -315,9 +315,9 @@ Deno.serve(async (request) => {
     return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   }
 
-  let body: Record<string, unknown> = {};
+  let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    body = (await request.json()) as Record<string, unknown>;
   } catch {
     body = {};
   }
@@ -362,6 +362,95 @@ Deno.serve(async (request) => {
 
     const pushResult = await sendPushToSubscriptions(targetUserId, testPayload);
     return Response.json({ success: true, ...pushResult }, { headers: corsHeaders });
+  }
+
+  // Endpoint para notificar membros do grupo que um integrante já almoçou
+  if (body.action === "notify_already_ate") {
+    if (!callerUserId) {
+      return Response.json({ error: "Autenticação necessária." }, { status: 401, headers: corsHeaders });
+    }
+
+    const groupId = typeof body.group_id === "string" ? body.group_id : null;
+    if (!groupId) {
+      return Response.json({ error: "ID do grupo é obrigatório." }, { status: 400, headers: corsHeaders });
+    }
+
+    // Valida que o callerUserId é membro do grupo
+    const { data: memberRecord, error: memberError } = await supabase
+      .from("group_members")
+      .select("group_id")
+      .eq("group_id", groupId)
+      .eq("user_id", callerUserId)
+      .maybeSingle();
+
+    if (memberError || !memberRecord) {
+      return Response.json({ error: "Você não faz parte deste grupo." }, { status: 403, headers: corsHeaders });
+    }
+
+    // Busca detalhes do grupo e nome do usuário
+    const [groupRes, profileRes] = await Promise.all([
+      supabase.from("groups").select("name,slug").eq("id", groupId).single(),
+      supabase.from("profiles").select("name").eq("id", callerUserId).single(),
+    ]);
+
+    if (!groupRes.data || !profileRes.data) {
+      return Response.json({ error: "Informações não encontradas." }, { status: 404, headers: corsHeaders });
+    }
+
+    const groupName = groupRes.data.name;
+    const groupSlug = groupRes.data.slug;
+    const senderName = profileRes.data.name;
+    const mealType = typeof body.meal_type === "string" ? body.meal_type : "LUNCH";
+
+    const payload = {
+      title: "Já pode almoçar? 🍽️",
+      body: `${senderName} já almoçou em ${groupName}!`,
+      url: `/g/${encodeURIComponent(groupSlug)}/hoje`,
+      tag: `already-ate-${groupId}-${typeof body.date === "string" ? body.date : "today"}`,
+    };
+
+    if (mealType === "BREAKFAST") {
+      payload.title = "Já pode almoçar? ☕";
+      payload.body = `${senderName} já tomou o desjejum em ${groupName}!`;
+    } else if (mealType === "DINNER") {
+      payload.title = "Já pode almoçar? 🍲";
+      payload.body = `${senderName} já jantou em ${groupName}!`;
+    }
+
+    // Busca os outros membros do grupo
+    const { data: groupMembers, error: membersError } = await supabase
+      .from("group_members")
+      .select("user_id")
+      .eq("group_id", groupId)
+      .neq("user_id", callerUserId);
+
+    if (membersError) {
+      return Response.json({ error: membersError.message }, { status: 500, headers: corsHeaders });
+    }
+
+    const otherMemberIds = (groupMembers ?? []).map((m: { user_id: string }) => m.user_id);
+    if (!otherMemberIds.length) {
+      return Response.json({ success: true, count: 0, message: "Nenhum outro membro no grupo." }, { headers: corsHeaders });
+    }
+
+    const { data: prefs } = await supabase
+      .from("notification_preferences")
+      .select("user_id,push_enabled")
+      .in("user_id", otherMemberIds);
+
+    const pushEnabledMap = new Map((prefs ?? []).map((p: { user_id: string; push_enabled: boolean }) => [p.user_id, p.push_enabled]));
+
+    const eligibleUserIds = otherMemberIds.filter((userId: string) => {
+      const isEnabled = pushEnabledMap.get(userId);
+      return isEnabled !== false;
+    });
+
+    const results = await Promise.all(
+      eligibleUserIds.map((userId: string) => sendPushToSubscriptions(userId, payload))
+    );
+
+    const totalSent = results.reduce((acc, r) => acc + (r.count ?? 0), 0);
+    return Response.json({ success: true, recipientsCount: eligibleUserIds.length, totalPushes: totalSent }, { headers: corsHeaders });
   }
 
   if (!isCronAuthorized) {

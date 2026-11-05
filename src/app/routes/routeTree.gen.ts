@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from "./../pages/__root";
 import { Route as IndexRouteImport } from "./../pages/index";
 import { Route as AgendaRouteImport } from "./../pages/agenda";
+import { Route as BossRouteImport } from "./../pages/boss";
 import { Route as CadastroRouteImport } from "./../pages/cadastro";
 import { Route as EntrarRouteImport } from "./../pages/entrar";
 import { Route as EsqueciSenhaRouteImport } from "./../pages/esqueci-senha";
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const AgendaRoute = AgendaRouteImport.update({
   id: "/agenda",
   path: "/agenda",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const BossRoute = BossRouteImport.update({
+  id: "/boss",
+  path: "/boss",
   getParentRoute: () => rootRouteImport,
 } as any);
 const CadastroRoute = CadastroRouteImport.update({
@@ -166,6 +172,7 @@ const GruposGroupIdHojeRoute = GruposGroupIdHojeRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/boss": typeof BossRoute;
   "/cadastro": typeof CadastroRoute;
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
@@ -193,6 +200,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/boss": typeof BossRoute;
   "/cadastro": typeof CadastroRoute;
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/agenda": typeof AgendaRoute;
+  "/boss": typeof BossRoute;
   "/cadastro": typeof CadastroRoute;
   "/entrar": typeof EntrarRoute;
   "/esqueci-senha": typeof EsqueciSenhaRoute;
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/agenda"
+    | "/boss"
     | "/cadastro"
     | "/entrar"
     | "/esqueci-senha"
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
   to:
     | "/"
     | "/agenda"
+    | "/boss"
     | "/cadastro"
     | "/entrar"
     | "/esqueci-senha"
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/agenda"
+    | "/boss"
     | "/cadastro"
     | "/entrar"
     | "/esqueci-senha"
@@ -326,6 +338,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AgendaRoute: typeof AgendaRoute;
+  BossRoute: typeof BossRoute;
   CadastroRoute: typeof CadastroRoute;
   EntrarRoute: typeof EntrarRoute;
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute;
@@ -352,6 +365,13 @@ declare module "@tanstack/react-router" {
       path: "/agenda";
       fullPath: "/agenda";
       preLoaderRoute: typeof AgendaRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/boss": {
+      id: "/boss";
+      path: "/boss";
+      fullPath: "/boss";
+      preLoaderRoute: typeof BossRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/cadastro": {
@@ -584,6 +604,7 @@ const GruposRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
+  BossRoute: BossRoute,
   CadastroRoute: CadastroRoute,
   EntrarRoute: EntrarRoute,
   EsqueciSenhaRoute: EsqueciSenhaRoute,

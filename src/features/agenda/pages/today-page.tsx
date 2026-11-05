@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Check, Hand, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { fetchDailyAgenda, saveDailyEntry } from "@/features/agenda/api/agenda-api";
+import { fetchDailyAgenda, markAlreadyAte, saveDailyEntry } from "@/features/agenda/api/agenda-api";
 import { fetchWeeklyAgenda, getWorkWeekDates } from "@/features/agenda/api/weekly-agenda-api";
 import { MealCard } from "@/features/agenda/components/meal-card";
 import { MealEntryDialog, type MealDraft } from "@/features/agenda/components/meal-entry-dialog";
@@ -58,6 +58,13 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
   const entryMutation = useMutation({
     mutationFn: saveDailyEntry,
     onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["daily-agenda", group?.id, date] }); },
+  });
+  const alreadyAteMutation = useMutation({
+    mutationFn: markAlreadyAte,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["daily-agenda", group?.id, date] });
+      setNotice("Marcado como concluído! Notificação enviada para os membros do grupo.");
+    },
   });
   const pendingMeals = meals.filter((meal) => meal.mine?.status === "PLANNED");
 
@@ -162,6 +169,16 @@ export function TodayPage({ groupSlug }: { groupSlug: string }) {
                 meal={meal}
                 onEdit={() => openEditor(meal.type)}
                 onWaitFor={(person) => setWaitTarget({ mealType: meal.type, person })}
+                onAlreadyAte={() => {
+                  if (!group) return;
+                  alreadyAteMutation.mutate({
+                    groupId: group.id,
+                    date,
+                    mealType: meal.type,
+                    time: meal.mine?.time ?? null,
+                  });
+                }}
+                isAlreadyAteLoading={alreadyAteMutation.isPending && alreadyAteMutation.variables?.mealType === meal.type}
               />
             ))}
           </div>

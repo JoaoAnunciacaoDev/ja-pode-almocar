@@ -1,14 +1,16 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, LogOut, Settings, User, Utensils } from "lucide-react";
+import { Bell, Crown, LogOut, Settings, User, Utensils } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useBossStatus } from "@/features/boss/hooks/use-boss-status";
 import { GroupSwitcher } from "@/features/groups/components/group-switcher";
 import { SiteFooter } from "@/shared/components/site-footer";
 import { requireSupabaseClient } from "@/shared/utils/supabase-client";
 
 export function AppShell({ children, groupSlug }: { children: ReactNode; groupSlug?: string }) {
   const { user } = useAuth();
+  const { data: isBoss } = useBossStatus();
   const navigate = useNavigate();
   const displayName = String(user?.user_metadata.name || user?.email || "Usuário");
   const initials = displayName.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
@@ -27,6 +29,15 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
             <span className="hidden sm:inline">Já pode almoçar?</span>
           </Link>
           <div className="flex items-center gap-3">
+            {isBoss && (
+              <Link
+                to="/boss"
+                className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-extrabold text-amber-900 transition hover:bg-amber-200"
+              >
+                <Crown aria-hidden="true" className="size-3.5 text-amber-700" />
+                Painel Boss
+              </Link>
+            )}
             {groupSlug && <div className="hidden md:block"><GroupSwitcher groupSlug={groupSlug} /></div>}
             <Link to="/grupos" className="rounded-full px-3 py-2 text-sm font-bold text-black/55 hover:bg-black/5 md:hidden">Grupos</Link>
             <Link to="/grupos" className="hidden rounded-full px-3 py-2 text-sm font-bold text-black/55 hover:bg-black/5 md:block">Meus grupos</Link>
@@ -37,9 +48,21 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
               <summary title={displayName} aria-label="Abrir menu do perfil" className="grid size-10 list-none cursor-pointer place-items-center rounded-full bg-[var(--ink)] text-sm font-bold text-white transition hover:bg-[var(--tomato)] focus:outline-none focus:ring-4 focus:ring-[var(--tomato)]/15 [&::-webkit-details-marker]:hidden">{initials}</summary>
               <div className="absolute right-0 z-20 mt-3 w-64 overflow-hidden rounded-2xl border border-black/8 bg-white shadow-[0_18px_60px_rgba(42,35,28,.16)]">
                 <div className="border-b border-black/7 px-4 py-3">
-                  <p className="truncate text-sm font-extrabold">{displayName}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="truncate text-sm font-extrabold">{displayName}</p>
+                    {isBoss && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-800">
+                        <Crown className="size-2.5" /> Boss
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-0.5 truncate text-xs text-black/40">{user?.email}</p>
                 </div>
+                {isBoss && (
+                  <Link to="/boss" className="flex items-center gap-3 bg-amber-50/60 px-4 py-3 text-sm font-extrabold text-amber-900 transition hover:bg-amber-100/70 border-b border-black/7">
+                    <Crown aria-hidden="true" className="size-4 text-amber-600" />Painel Boss
+                  </Link>
+                )}
                 <Link to="/configuracoes/perfil" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><User aria-hidden="true" className="size-4" />Configurações do perfil</Link>
                 <Link to="/configuracoes/notificacoes" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><Bell aria-hidden="true" className="size-4" />Configurações de notificações</Link>
                 <button type="button" onClick={signOut} className="flex w-full items-center gap-3 border-t border-black/7 px-4 py-3 text-left text-sm font-bold text-[var(--tomato-dark)] transition hover:bg-[var(--blush)]"><LogOut aria-hidden="true" className="size-4" />Sair da conta</button>
