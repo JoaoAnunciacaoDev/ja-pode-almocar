@@ -66,3 +66,35 @@ export async function saveDailyEntry(input: { groupId: string; date: string; mea
   }, { onConflict: "group_id,user_id,date,meal_type" });
   if (error) throw error;
 }
+
+export async function markAlreadyAte(input: {
+  groupId: string;
+  date: string;
+  mealType: MealType;
+  time?: string | null;
+}) {
+  const client = requireSupabaseClient();
+  const { data: userData } = await client.auth.getUser();
+  if (!userData.user) throw new Error("Autenticação necessária.");
+
+  await saveDailyEntry({
+    groupId: input.groupId,
+    date: input.date,
+    mealType: input.mealType,
+    time: input.time ?? null,
+    status: "ALREADY_ATE",
+  });
+
+  try {
+    await client.functions.invoke("send-notification-reminders", {
+      body: {
+        action: "notify_already_ate",
+        group_id: input.groupId,
+        meal_type: input.mealType,
+        date: input.date,
+      },
+    });
+  } catch (error) {
+    console.warn("Falha ao disparar notificação push de 'já almoçou':", error);
+  }
+}

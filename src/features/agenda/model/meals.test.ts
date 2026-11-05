@@ -21,6 +21,10 @@ describe("resolveMealForDate", () => {
     const entries: MealEntry[] = [{ date: "2026-09-21", mealType: "LUNCH", time: "12:30", availableUntil: "13:00", status: "PLANNED" }];
     expect(resolveMealForDate("2026-09-21", "LUNCH", routines, entries)).toEqual({ time: "12:30", availableUntil: "13:00", status: "PLANNED" });
   });
+  test("allows a dated entry to record already ate status", () => {
+    const entries: MealEntry[] = [{ date: "2026-09-21", mealType: "LUNCH", time: "12:00", status: "ALREADY_ATE" }];
+    expect(resolveMealForDate("2026-09-21", "LUNCH", routines, entries)).toEqual({ time: "12:00", status: "ALREADY_ATE" });
+  });
 });
 
 test("formats and parses an availability range", () => {

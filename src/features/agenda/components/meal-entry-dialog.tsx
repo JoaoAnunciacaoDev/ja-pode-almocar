@@ -7,6 +7,7 @@ const mealLabels: Record<MealType, string> = { BREAKFAST: "Desjejum", LUNCH: "Al
 const statusOptions: Array<{ value: MealStatus; label: string; description: string }> = [
   { value: "CONFIRMED", label: "Confirmado", description: "Vou neste horário" },
   { value: "PLANNED", label: "Planejado", description: "Ainda posso mudar" },
+  { value: "ALREADY_ATE", label: "Já realizei", description: "Já almocei / concluído" },
   { value: "NOT_GOING", label: "Não vou", description: "Não participarei" },
 ];
 

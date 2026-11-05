@@ -1,5 +1,5 @@
 export const mealTypes = ["BREAKFAST", "LUNCH", "DINNER"] as const;
-export const mealStatuses = ["CONFIRMED", "PLANNED", "NOT_GOING"] as const;
+export const mealStatuses = ["CONFIRMED", "PLANNED", "NOT_GOING", "ALREADY_ATE"] as const;
 
 export type MealType = (typeof mealTypes)[number];
 export type MealStatus = (typeof mealStatuses)[number];
