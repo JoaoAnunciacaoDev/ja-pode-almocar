@@ -67,6 +67,21 @@ begin
       ) group_item
     ),
     'users', (
+      with user_groups as (
+        select user_id, count(distinct group_id)::int as count
+        from public.group_members
+        group by user_id
+      ),
+      user_meals as (
+        select user_id, max(updated_at) as latest_meal
+        from public.meal_entries
+        group by user_id
+      ),
+      user_pushes as (
+        select user_id, max(updated_at) as latest_push
+        from public.push_subscriptions
+        group by user_id
+      )
       select coalesce(jsonb_agg(user_item), '[]'::jsonb)
       from (
         select
@@ -80,19 +95,20 @@ begin
               p.last_seen_at,
               u.last_sign_in_at,
               p.updated_at,
-              (select max(me.updated_at) from public.meal_entries me where me.user_id = p.id),
-              (select max(ps.updated_at) from public.push_subscriptions ps where ps.user_id = p.id)
+              um.latest_meal,
+              up.latest_push
             ),
             p.last_seen_at,
             u.last_sign_in_at,
             p.updated_at,
             p.created_at
           ) as last_sign_in_at,
-          count(distinct gm.group_id)::int as groups_count
+          coalesce(ug.count, 0) as groups_count
         from public.profiles p
         left join auth.users u on u.id = p.id
-        left join public.group_members gm on gm.user_id = p.id
-        group by p.id, p.name, p.email, p.created_at, p.is_boss, p.last_seen_at, u.last_sign_in_at, p.updated_at
+        left join user_groups ug on ug.user_id = p.id
+        left join user_meals um on um.user_id = p.id
+        left join user_pushes up on up.user_id = p.id
         order by p.created_at desc
       ) user_item
     )

@@ -35,7 +35,7 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
                 className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-extrabold text-amber-900 transition hover:bg-amber-200"
               >
                 <Crown aria-hidden="true" className="size-3.5 text-amber-700" />
-                Painel Boss
+                Painel
               </Link>
             )}
             {groupSlug && <div className="hidden md:block"><GroupSwitcher groupSlug={groupSlug} /></div>}
@@ -60,7 +60,7 @@ export function AppShell({ children, groupSlug }: { children: ReactNode; groupSl
                 </div>
                 {isBoss && (
                   <Link to="/boss" className="flex items-center gap-3 bg-amber-50/60 px-4 py-3 text-sm font-extrabold text-amber-900 transition hover:bg-amber-100/70 border-b border-black/7">
-                    <Crown aria-hidden="true" className="size-4 text-amber-600" />Painel Boss
+                    <Crown aria-hidden="true" className="size-4 text-amber-600" />Painel
                   </Link>
                 )}
                 <Link to="/configuracoes/perfil" className="flex items-center gap-3 px-4 py-3 text-sm font-bold transition hover:bg-[var(--cream)]"><User aria-hidden="true" className="size-4" />Configurações do perfil</Link>

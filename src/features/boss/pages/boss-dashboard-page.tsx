@@ -163,7 +163,7 @@ export function BossDashboardPage() {
               </span>
             </div>
             <h1 className="mt-2 font-serif text-4xl font-extrabold tracking-tight sm:text-5xl">
-              Dashboard Boss
+              Dashboard
             </h1>
             <p className="mt-2 text-sm text-black/60">
               Acompanhamento de todos os grupos cadastrados, integrantes e acessos na plataforma.
