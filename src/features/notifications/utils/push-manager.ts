@@ -9,10 +9,13 @@ export function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+export function isServiceWorkerSupported(): boolean {
+  return typeof window !== "undefined" && "serviceWorker" in navigator;
+}
+
 export function isPushSupported(): boolean {
   return (
-    typeof window !== "undefined" &&
-    "serviceWorker" in navigator &&
+    isServiceWorkerSupported() &&
     "PushManager" in window &&
     "Notification" in window
   );
@@ -24,7 +27,7 @@ export function getPushPermission(): NotificationPermission | "unsupported" {
 }
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!isPushSupported()) return null;
+  if (!isServiceWorkerSupported()) return null;
   try {
     return await navigator.serviceWorker.register("/sw.js", { scope: "/" });
   } catch (error) {
